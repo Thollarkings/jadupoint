@@ -16,9 +16,11 @@ const jollofDishes = [
 
 const additionalMeats = [
   { name: "Whole Event", price: "$15/person" },
-  { name: "Beef Suya", price: "$5/person" },
-  { name: "Chicken Suya", price: "$5/person" },
-  { name: "Chicken Wing Suya", price: "$5/person" }
+  { name: "Snails", price: "$10/person" },
+  { name: "Alligator", price: "$15/person" },
+  { name: "smoked Fish", price: "$5/person" },
+  { name: "Beef", price: "$10/person" },
+  { name: "Goat Meat", price: "$15/person" }
 ];
 
 const LABOUR_COST = 250;
@@ -174,8 +176,8 @@ Additional Information: ${formData.additionalInfo || 'None provided'}
 
               {/* Additional Meats */}
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white">Additional Meats (per person)</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <h4 className="text-lg font-semibold text-white">Special Proteins (per person)</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
                   {additionalMeats.map(meat => (
                     <div key={meat.name} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                       <span className="text-gray-300">{meat.name}</span>

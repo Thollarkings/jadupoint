@@ -1,32 +1,24 @@
-
-export interface Recipe {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  prices: {
-    medium: number;
-    large: number;
-  };
-  ingredients: string[];
-  cookingTime: string;
-  spiceLevel: 'Mild' | 'Medium' | 'Hot';
-}
-
 export const recipes: Recipe[] = [
   {
-    id: '1',
-    name: 'Classic Nigerian Jollof',
-    description: 'Traditional Nigerian Jollof rice with the perfect blend of tomatoes, peppers, and aromatic spices.',
-    image: 'jollof/jollof1.jpg',
+    id: '9',
+    name: "Umami Bomb Fried Rice",
+    description: "Savory explosion with shiitake mushrooms, bonito flakes, and spicy XO sauce topped with crispy garlic",
+    image: "Fried-Rice1.jpg",
     rating: 4.8,
-    reviews: 245,
-    prices: { medium: 15.99, large: 22.99 },
-    ingredients: ['Basmati rice', 'Fresh tomatoes', 'Red bell peppers', 'Onions', 'Nigerian spices', 'Chicken stock'],
-    cookingTime: '45 minutes',
-    spiceLevel: 'Medium'
+    reviews: 130,
+    prices: { medium: 22.99, large: 29.99 },
+    ingredients: [
+      "Black rice",
+      "Homemade XO sauce (with dried shrimp and chilies)",
+      "Shiitake mushrooms",
+      "Bonito flakes",
+      "Crispy garlic chips",
+      "Soft-poached egg",
+      "Fermented black bean paste",
+      "Sesame-chili oil"
+    ],
+    cookingTime: "30 minutes",
+    spiceLevel: "Hot"
   },
   {
     id: '2',
@@ -41,18 +33,6 @@ export const recipes: Recipe[] = [
     spiceLevel: 'Hot'
   },
   {
-    id: '3',
-    name: 'Coconut Jollof Rice',
-    description: 'A tropical twist on the classic with coconut milk creating a creamy, aromatic delight.',
-    image: 'jollof/jollof3.jpg',
-    rating: 4.7,
-    reviews: 156,
-    prices: { medium: 16.99, large: 23.99 },
-    ingredients: ['Jasmine rice', 'Coconut milk', 'Fresh tomatoes', 'Ginger', 'Turmeric', 'Vegetable broth'],
-    cookingTime: '40 minutes',
-    spiceLevel: 'Mild'
-  },
-  {
     id: '4',
     name: 'Seafood Jollof Supreme',
     description: 'Premium Jollof rice loaded with fresh prawns, fish, and a medley of coastal spices.',
@@ -65,6 +45,51 @@ export const recipes: Recipe[] = [
     spiceLevel: 'Medium'
   },
   {
+    id: '1',
+    name: 'Classic Nigerian Jollof',
+    description: 'Traditional Nigerian Jollof rice with the perfect blend of tomatoes, peppers, and aromatic spices.',
+    image: 'jollof/jollof1.jpg',
+    rating: 4.8,
+    reviews: 245,
+    prices: { medium: 15.99, large: 22.99 },
+    ingredients: ['Basmati rice', 'Fresh tomatoes', 'Red bell peppers', 'Onions', 'Nigerian spices', 'Chicken stock'],
+    cookingTime: '45 minutes',
+    spiceLevel: 'Medium'
+  },
+  {
+    id: '3',
+    name: 'Coconut Jollof Rice',
+    description: 'A tropical twist on the classic with coconut milk creating a creamy, aromatic delight.',
+    image: 'jollof/jollof3.jpg',
+    rating: 4.7,
+    reviews: 156,
+    prices: { medium: 16.99, large: 23.99 },
+    ingredients: ['Jasmine rice', 'Coconut milk', 'Fresh tomatoes', 'Ginger', 'Turmeric', 'Vegetable broth'],
+    cookingTime: '40 minutes',
+    spiceLevel: 'Mild'
+  },
+  {
+    id: '7',
+    name: "Dragon's Breath Fried Rice",
+    description: "Intensely spicy fried rice with habanero peppers, Szechuan peppercorns, and chili oil. Not for the faint-hearted!",
+    image: "Fried-Rice2.jpg",
+    rating: 4.7,
+    reviews: 120,
+    prices: { medium: 19.99, large: 26.99 },
+    ingredients: [
+      "Jasmine rice",
+      "Habanero peppers",
+      "Szechuan peppercorns",
+      "Chili oil",
+      "Charred pineapple chunks",
+      "Crispy pork belly",
+      "Scallions",
+      "Soy-tamarind glaze"
+    ],
+    cookingTime: "20 minutes",
+    spiceLevel: "Hot"
+  },
+  {
     id: '5',
     name: 'Vegetarian Garden Jollof',
     description: 'Plant-based perfection with seasonal vegetables and herb-infused aromatic rice.',
@@ -75,6 +100,27 @@ export const recipes: Recipe[] = [
     ingredients: ['Brown rice', 'Mixed vegetables', 'Fresh herbs', 'Vegetable stock', 'Nutritional yeast', 'Olive oil'],
     cookingTime: '35 minutes',
     spiceLevel: 'Mild'
+  },
+  {
+    id: '8',
+    name: "Tropical Warrior Fried Rice",
+    description: "Jerk-spiced fried rice with grilled shrimp, mango, coconut flakes and a ghost pepper honey glaze",
+    image: "Fried-Rice3.jpg",
+    rating: 4.6,
+    reviews: 95,
+    prices: { medium: 21.99, large: 28.99 },
+    ingredients: [
+      "Basmati rice",
+      "Caribbean jerk marinade",
+      "Ghost pepper honey",
+      "Grilled shrimp",
+      "Toasted coconut flakes",
+      "Fresh mango cubes",
+      "Red bell peppers",
+      "Toasted macadamia nuts"
+    ],
+    cookingTime: "25 minutes",
+    spiceLevel: "Hot"
   },
   {
     id: '6',
