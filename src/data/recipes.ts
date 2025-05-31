@@ -1,17 +1,3 @@
-// Define the Recipe type if not already imported
-export type Recipe = {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  prices: { medium: number; large: number };
-  ingredients: string[];
-  cookingTime: string;
-  spiceLevel: string;
-};
-
 export const recipes: Recipe[] = [
   {
     id: '9',
@@ -33,6 +19,27 @@ export const recipes: Recipe[] = [
     ],
     cookingTime: "30 minutes",
     spiceLevel: "Hot"
+  },
+  {
+    id: '10',
+    name: "Smoked Jollof Snails",
+    description: "Exquisite smoked snails served on a bed of our signature party Jollof rice with a rich pepper sauce",
+    image: "jollof-snails1.jpg",
+    rating: 4.95,
+    reviews: 87,
+    prices: { medium: 32.99, large: 49.99 },
+    ingredients: [
+      "Fresh garden snails",
+      "Smoked jollof rice",
+      "Palm oil infusion",
+      "African nutmeg",
+      "Scotch bonnet peppers",
+      "Smoked turkey stock",
+      "Grilled plantains",
+      "Edible flowers"
+    ],
+    cookingTime: "60 minutes",
+    spiceLevel: "Medium"
   },
   {
     id: '2',

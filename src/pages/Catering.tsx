@@ -21,6 +21,12 @@ const jollofDishes = [
     price: "$30", 
     image: "Fried-Rice1.jpg"
   },
+    { 
+    name: "Smoked Jollof Snails",
+    description: "Exquisite smoked snails served on a bed of our signature party Jollof rice with a rich pepper sauce",
+    price: "$45", 
+    image: "jollof-snails1.jpg"
+  },
   { 
     name: "Dragon's Breath Fried Rice",
     description: "Intensely spicy fried rice with habanero peppers, Szechuan peppercorns, and chili oil. Not for the faint-hearted!",
