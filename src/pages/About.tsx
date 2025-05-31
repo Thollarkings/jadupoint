@@ -1,8 +1,8 @@
 
 const About = () => {
   return (
-    <div className="min-h-screen px-4 py-8 ">
-      <div className="max-w-5xl mx-auto w-full bg-dark-gradient">
+    <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black">
+      <div className="max-w-5xl mx-auto w-full bg-gradient-to-r from-black via-coral-900 to-black rounded-lg shadow-lg">
         <div className="glass-card p-8 md:p-12 animate-fade-in">
           <h1 className="text-4xl font-bold text-white mb-8 text-center">
             About <span className="text-coral-400">JaduPoint</span>

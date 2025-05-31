@@ -28,7 +28,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="glass-card m-4 p-4 sticky top-4 z-50">
+        <header className="glass-card m-4 p-4 sticky top-4 z-50">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-2xl font-bold text-coral-400 hover:text-coral-300 transition-colors">
             JaduPoint

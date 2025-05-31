@@ -8,7 +8,7 @@ const Home = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-r from-black via-coral-900 to-black">
       {/* Hero Section */}
       <section className="text-center py-16 px-4">
         <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-fade-in">

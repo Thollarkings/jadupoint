@@ -25,7 +25,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <HashRouter>  {/* <-- Changed here */}
-            <div className="min-h-screen bg-dark-gradient">
+            <div className="bg-black">
               <Header />
               <main>
                 <Routes>

@@ -73,8 +73,10 @@ export default {
 					600: '#dc2626',
 					700: '#b91c1c',
 					800: '#991b1b',
-					900: '#7f1d1d',
+					900: '#301934',
 				}
+
+				
 			},
 			backgroundImage: {
 				'dark-gradient': 'linear-gradient(135deg, #1e293b 0%, #0f172a  50%, #020617 100%)',

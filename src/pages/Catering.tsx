@@ -99,11 +99,11 @@ const Catering = () => {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8">
+    <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-white mb-4">Event Catering</h1>
+          <h1 className="text-5xl font-bold text-white mb-4">Event <span className="text-coral-400">Catering</span></h1>
           <p className="text-xl text-gray-300">Let's spice up your event with our special courses!</p>
         </div>
 
@@ -118,8 +118,8 @@ const Catering = () => {
                 <label className="block text-gray-300 mb-2">Choose Your Jollof Dish</label>
                 <div className="relative">
                   <select
-                    className="w-full p-3 border border-gray-200 rounded-xl text-white bg-zinc-700"
-                    style={{ backgroundImage: 'linear-gradient(to right, #001f4d,rgb(45, 15, 46),rgb(24, 2, 40))' }}
+                    className="w-full p-3 border border-gray-700 rounded-xl text-white bg-coral-900"
+                    style={{ backgroundImage: 'linear-gradient(to right,rgb(35, 1, 51),rgb(42, 10, 43),rgb(24, 2, 40))' }}
                     value={selectedDishIndex}
                     onChange={e => setSelectedDishIndex(Number(e.target.value))}
                   >
@@ -133,13 +133,13 @@ const Catering = () => {
                   </span>
                 </div>
                 {/* Display selected dish details */}
-                <div className="mt-4 bg-gray-800 p-4 rounded-2xl">
+                <div className="mt-4 bg-gradient-to-r from-black via-coral-900 to-black p-4 rounded-2xl">
 {                  <img 
                     src={jollofDishes[selectedDishIndex].image} 
                     alt={jollofDishes[selectedDishIndex].name} 
                     className="w-full h-48 object-cover rounded-lg mb-4"
                   />}
-                  <h3 className="text-xl font-semibold text-coral-400">{jollofDishes[selectedDishIndex].name}</h3>
+                  <h3 className="text-xl font-semibold text-coral-300">{jollofDishes[selectedDishIndex].name}</h3>
                   <p className="text-gray-300">{jollofDishes[selectedDishIndex].description}</p>
                   <p className="text-2xl font-bold text-white">{jollofDishes[selectedDishIndex].price}</p>
                 </div>
@@ -152,7 +152,7 @@ const Catering = () => {
                   {additionalMeats.map(meat => (
                     <div key={meat.name} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                       <span className="text-gray-300">{meat.name}</span>
-                      <span className="text-coral-400 font-semibold">{meat.price}</span>
+                      <span className="text-coral-300 font-semibold">{meat.price}</span>
                     </div>
                   ))}
                 </div>
@@ -162,21 +162,22 @@ const Catering = () => {
               <div className="border-t border-white/10 pt-4">
                 <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                   <span className="text-gray-300">Labor for the Day</span>
-                  <span className="text-coral-400 font-semibold">$250</span>
+                  <span className="text-coral-300 font-semibold">$250</span>
                 </div>
               </div>
             </div>
 
             {/* Terms & Conditions */}
             <div className="glass-card p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Terms & Conditions</h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                <li>• Catering services cover the whole day until all meats are cooked and served.</li>
-                <li>• Customers are welcome to inspect all meats before grilling begins.</li>
-                <li>• We do not grill or cook meats provided onsite by customers.</li>
-                <li>• Additional charges apply if we provide the grill.</li>
-                <li>• Due to scheduling constraints, if a client cancels, only half of the deposit amount will be refunded.</li>
-              </ul>
+<h3 className="text-xl font-semibold text-white mb-4">Terms & Conditions</h3>
+<ul className="space-y-2 text-gray-300 text-sm">
+  <li>• Catering services cover the entire event day until all Jollof rice dishes and meats are fully prepared and served.</li>
+  <li>• Customers are welcome to inspect all meats and Jollof rice dishes before serving begins.</li>
+  <li>• We do <strong>not</strong> grill or cook any meats provided onsite by customers.</li>
+  <li>• Additional charges apply if we provide grilling equipment or extra cooking services.</li>
+  <li>• Due to scheduling constraints, if a client cancels, only half of the deposit amount will be refunded.</li>
+</ul>
+
             </div>
           </div>
 
@@ -268,7 +269,7 @@ const Catering = () => {
 
               <Button 
                 type="submit" 
-                className="w-full btn-coral text-lg py-4"
+                className="w-full text-lg text-white py-4 bg-gradient-to-r from-black via-zinc-900 to-black"
                 disabled={loading}
               >
                 {loading ? 'Submitting...' : 'Submit Booking Request'}

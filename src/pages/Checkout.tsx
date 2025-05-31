@@ -64,7 +64,7 @@ const Checkout = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen px-4 py-8 flex items-center justify-center">
+      <div className="min-h-screen px-4 py-8 flex items-center justify-center bg-gradient-to-r from-black via-coral-900 to-black">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-4">Your cart is empty</h1>
           <p className="text-gray-300 mb-6">Add some delicious Jollof rice to get started!</p>
