@@ -9,37 +9,37 @@ const jollofDishes = [
     name: "Classic Nigerian Jollof",
     description: "Traditional Nigerian party Jollof rice.",
     price: "$26",
-    image: "public/jollof/jollof1.jpg"
+    image: "jollof/jollof1.jpg"
   },
   {
     name: "Smoky Party Jollof",
     description: "Smoky, flavorful Jollof perfect for parties.",
     price: "$30",
-    image: "public/jollof/jollof2.jpg"
+    image: "jollof/jollof2.jpg"
   },
   {
     name: "Coconut Jollof Rice",
     description: "Creamy coconut-infused Jollof rice.",
     price: "$37",
-    image: "public/jollof/jollof3.jpg"
+    image: "jollof/jollof3.jpg"
   },
   {
     name: "Seafood Jollof Supreme",
     description: "Loaded with fresh seafood delights.",
     price: "$30",
-    image: "public/jollof/jollof4.jpg"
+    image: "jollof/jollof4.jpg"
   },
   {
     name: "Vegetarian Garden Jollof",
     description: "Packed with garden-fresh vegetables.",
     price: "$35",
-    image: "public/jollof/jollof5.jpg"
+    image: "jollof/jollof5.jpg"
   },
   {
     name: "Spicy Warrior Jollof",
     description: "Our signature spicy Jollof experience.",
     price: "$30",
-    image: "public/jollof/jollof6.jpg"
+    image: "jollof/jollof6.jpg"
   }
 ];
 
