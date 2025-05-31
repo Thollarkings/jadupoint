@@ -70,7 +70,7 @@ const About = () => {
                 <ul className="text-gray-300 space-y-3">
                   <li className="flex items-start">
                     <span className="text-coral-400 mr-2">•</span>
-                    Over 50 years of combined culinary experience
+                    Over 16 years of combined culinary experience
                   </li>
                   <li className="flex items-start">
                     <span className="text-coral-400 mr-2">•</span>
