@@ -18,11 +18,11 @@ const Home = () => {
           Experience the authentic taste of perfectly crafted Jollof rice varieties, 
           delivered fresh to your doorstep with the magic touch of tradition.
         </p>
-        <div className="animate-fade-in">
+{/*         <div className="animate-fade-in">
           <a href="#recipes" className="btn-coral inline-block">
             Explore Our Flavors
           </a>
-        </div>
+        </div> */}
       </section>
 
       {/* Recipes Grid */}

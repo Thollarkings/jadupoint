@@ -1,6 +1,5 @@
-
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, LogOut } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, X } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
@@ -13,12 +12,18 @@ const Header = () => {
   const { user, signOut } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showCartSidebar, setShowCartSidebar] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen((prev) => !prev);
   };
 
   return (
@@ -28,50 +33,61 @@ const Header = () => {
           <Link to="/" className="text-2xl font-bold text-coral-400 hover:text-coral-300 transition-colors">
             JaduPoint
           </Link>
-          
+
+          {/* Desktop Nav */}
           <nav className="hidden md:flex space-x-6">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className={`transition-colors ${isActive('/') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
             >
               Home
             </Link>
-            <Link 
-              to="/about" 
+            <Link
+              to="/about"
               className={`transition-colors ${isActive('/about') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
             >
               About
             </Link>
-            <Link 
-              to="/contact" 
+            <Link
+              to="/contact"
               className={`transition-colors ${isActive('/contact') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
             >
               Contact
             </Link>
-            <Link 
-              to="/order" 
+            <Link
+              to="/order"
               className={`transition-colors ${isActive('/order') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
             >
               Order
             </Link>
-            <Link 
-              to="/catering" 
+            <Link
+              to="/catering"
               className={`transition-colors ${isActive('/catering') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
             >
               Catering
             </Link>
           </nav>
 
+          {/* Mobile Hamburger Button */}
+          <button
+            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+            onClick={toggleMobileMenu}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
           <div className="flex items-center gap-4">
             {/* Cart */}
-            <button 
+            <button
               onClick={() => setShowCartSidebar(true)}
               className="relative p-2 hover:bg-white/10 rounded-lg transition-colors flex items-center text-gray-300 hover:text-white gap-2"
-            >  View Cart 
-              <ShoppingCart className="h-6 w-6 text-coral-400" /> 
+            >
+              View Cart
+              <ShoppingCart className="h-6 w-6 text-coral-400" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-coral-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {totalItems}
+                  {totalItems}
                 </span>
               )}
             </button>
@@ -79,9 +95,7 @@ const Header = () => {
             {/* Auth Section */}
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="text-white text-sm hidden sm:block">
-                  {user.email}
-                </span>
+                <span className="text-white text-sm hidden sm:block">{user.email}</span>
                 <button
                   onClick={handleSignOut}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
@@ -101,17 +115,52 @@ const Header = () => {
             )}
           </div>
         </div>
+
+        {/* Mobile Nav Menu */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden mt-4 flex flex-col space-y-3 bg-dark-gradient p-4 rounded-lg shadow-lg">
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`transition-colors ${isActive('/') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
+            >
+              Home
+            </Link>
+            <Link
+              to="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`transition-colors ${isActive('/about') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
+            >
+              About
+            </Link>
+            <Link
+              to="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`transition-colors ${isActive('/contact') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
+            >
+              Contact
+            </Link>
+            <Link
+              to="/order"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`transition-colors ${isActive('/order') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
+            >
+              Order
+            </Link>
+            <Link
+              to="/catering"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`transition-colors ${isActive('/catering') ? 'text-coral-400' : 'text-gray-300 hover:text-white'}`}
+            >
+              Catering
+            </Link>
+          </nav>
+        )}
       </header>
 
-      <AuthDialog 
-        isOpen={showAuthDialog}
-        onClose={() => setShowAuthDialog(false)}
-      />
+      <AuthDialog isOpen={showAuthDialog} onClose={() => setShowAuthDialog(false)} />
 
-      <CartSidebar 
-        isOpen={showCartSidebar}
-        onClose={() => setShowCartSidebar(false)}
-      />
+      <CartSidebar isOpen={showCartSidebar} onClose={() => setShowCartSidebar(false)} />
     </>
   );
 };
