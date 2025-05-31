@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
+import emailjs from '@emailjs/browser';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -8,13 +8,36 @@ const Contact = () => {
     email: '',
     message: ''
   });
+  const [loading, setLoading] = useState(false);
+
+  // Initialize EmailJS with your public key once
+  emailjs.init('VvF5HuAWU3b9UV75I');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the form data to your backend/Supabase
-    console.log('Form submitted:', formData);
-    alert('Thank you for your message! We\'ll get back to you soon.');
-    setFormData({ name: '', email: '', message: '' });
+    setLoading(true);
+
+    const serviceID = 'service_nhkj0mp';
+    const templateID = 'template_r7qndos';
+
+    const templateParams = {
+      name: formData.name,
+      email: formData.email,
+      message: formData.message,
+    };
+
+    emailjs.send(serviceID, templateID, templateParams)
+      .then(() => {
+        alert('Thank you for your message! We\'ll get back to you soon.');
+        setFormData({ name: '', email: '', message: '' });
+      })
+      .catch((error) => {
+        console.error('Failed to send email:', error);
+        alert('Oops! Something went wrong. Please try again later.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -40,18 +63,15 @@ const Contact = () => {
           {/* Contact Info */}
           <div className="glass-card p-6 animate-fade-in">
             <h2 className="text-2xl font-semibold text-coral-400 mb-6">Get in Touch</h2>
-            
             <div className="space-y-4">
               <div>
                 <h3 className="text-white font-semibold mb-1">Phone</h3>
                 <p className="text-gray-300">+1 (555) 123-JADU</p>
               </div>
-              
               <div>
                 <h3 className="text-white font-semibold mb-1">Email</h3>
                 <p className="text-gray-300">hello@jadupoint.com</p>
               </div>
-              
               <div>
                 <h3 className="text-white font-semibold mb-1">Address</h3>
                 <p className="text-gray-300">
@@ -59,7 +79,6 @@ const Contact = () => {
                   Coppell Texas 75019
                 </p>
               </div>
-              
               <div>
                 <h3 className="text-white font-semibold mb-1">Hours</h3>
                 <div className="text-gray-300 text-sm">
@@ -68,7 +87,6 @@ const Contact = () => {
                 </div>
               </div>
             </div>
-
             <div className="mt-8">
               <h3 className="text-white font-semibold mb-3">Quick Questions?</h3>
               <p className="text-gray-400 text-sm mb-4">
@@ -85,7 +103,6 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="glass-card p-6 animate-fade-in">
             <h2 className="text-2xl font-semibold text-coral-400 mb-6">Send us a Message</h2>
-            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-white font-semibold mb-2">Name</label>
@@ -99,7 +116,6 @@ const Contact = () => {
                   placeholder="Your full name"
                 />
               </div>
-              
               <div>
                 <label className="block text-white font-semibold mb-2">Email</label>
                 <input
@@ -112,7 +128,6 @@ const Contact = () => {
                   placeholder="your.email@example.com"
                 />
               </div>
-              
               <div>
                 <label className="block text-white font-semibold mb-2">Message</label>
                 <textarea
@@ -125,12 +140,10 @@ const Contact = () => {
                   placeholder="Tell us how we can help you..."
                 />
               </div>
-              
-              <Button type="submit" className="w-full btn-coral">
-                Send Message
+              <Button type="submit" className="w-full btn-coral" disabled={loading}>
+                {loading ? 'Sending...' : 'Send Message'}
               </Button>
             </form>
-            
             <div className="mt-6 p-4 bg-coral-500/10 border border-coral-500/20 rounded-lg">
               <p className="text-coral-300 text-sm">
                 <strong>Note:</strong> We typically respond to all inquiries within 24 hours. 
