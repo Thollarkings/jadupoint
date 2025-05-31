@@ -12,7 +12,7 @@ const Home = () => {
       {/* Hero Section */}
       <section className="text-center py-16 px-4">
         <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
-          Welcome to <span className="text-coral-400">JaduPoint</span>
+          Taste of <span className="text-coral-400">Africa</span>
         </h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8 animate-fade-in">
           Experience the authentic taste of perfectly crafted African cuisine , delivered fresh to your doorstep with the magic touch of tradition and love.
