@@ -193,7 +193,7 @@ Additional Information: ${formData.additionalInfo || 'None provided'}
                   <img 
                     src={jollofDishes[selectedDishIndex].image} 
                     alt={jollofDishes[selectedDishIndex].name} 
-                    className="w-full h-48 object-cover rounded-lg mb-4"
+                    className="w-full h-64 object-cover rounded-lg mb-4"
                   />
                   <h3 className="text-xl font-semibold text-coral-300">{jollofDishes[selectedDishIndex].name}</h3>
                   <p className="text-gray-300">{jollofDishes[selectedDishIndex].description}</p>
