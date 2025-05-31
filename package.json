@@ -1,9 +1,9 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "jadupoint-jollof",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://thollarkings.github.io/jollof-joy-order/",
+  "homepage": "https://thollarkings.github.io/jadupoint/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
