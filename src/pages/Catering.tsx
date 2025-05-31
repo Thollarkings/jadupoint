@@ -6,12 +6,33 @@ import { useToast } from '../hooks/use-toast';
 import emailjs from '@emailjs/browser'; // Uncomment if using EmailJS
 
 const jollofDishes = [
+  // Original jollof dishes
   { name: "Classic Nigerian Jollof", description: "Traditional Nigerian party Jollof rice.", price: "$26", image: "jollof/jollof1.jpg" },
   { name: "Smoky Party Jollof", description: "Smoky, flavorful Jollof perfect for parties.", price: "$30", image: "jollof/jollof2.jpg" },
   { name: "Coconut Jollof Rice", description: "Creamy coconut-infused Jollof rice.", price: "$37", image: "jollof/jollof3.jpg" },
   { name: "Seafood Jollof Supreme", description: "Loaded with fresh seafood delights.", price: "$30", image: "jollof/jollof4.jpg" },
   { name: "Vegetarian Garden Jollof", description: "Packed with garden-fresh vegetables.", price: "$35", image: "jollof/jollof5.jpg" },
-  { name: "Spicy Warrior Jollof", description: "Our signature spicy Jollof experience.", price: "$30", image: "jollof/jollof6.jpg" }
+  { name: "Spicy Warrior Jollof", description: "Our signature spicy Jollof experience.", price: "$30", image: "jollof/jollof6.jpg" },
+  
+  // Added fried rice dishes
+  { 
+    name: "Umami Bomb Fried Rice",
+    description: "Savory explosion with shiitake mushrooms, bonito flakes, and spicy XO sauce topped with crispy garlic",
+    price: "$30", 
+    image: "Fried-Rice1.jpg"
+  },
+  { 
+    name: "Dragon's Breath Fried Rice",
+    description: "Intensely spicy fried rice with habanero peppers, Szechuan peppercorns, and chili oil. Not for the faint-hearted!",
+    price: "$27", 
+    image: "Fried-Rice2.jpg"
+  },
+  { 
+    name: "Tropical Warrior Fried Rice",
+    description: "Jerk-spiced fried rice with grilled shrimp, mango, coconut flakes and a ghost pepper honey glaze",
+    price: "$29", 
+    image: "Fried-Rice3.jpg"
+  }
 ];
 
 const additionalMeats = [
@@ -174,7 +195,7 @@ Additional Information: ${formData.additionalInfo || 'None provided'}
                 </div>
               </div>
 
-              {/* Additional Meats */}
+              {/* Special Proteins */}
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-white">Special Proteins (per person)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">

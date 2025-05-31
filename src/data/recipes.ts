@@ -1,3 +1,17 @@
+// Define the Recipe type if not already imported
+export type Recipe = {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  rating: number;
+  reviews: number;
+  prices: { medium: number; large: number };
+  ingredients: string[];
+  cookingTime: string;
+  spiceLevel: string;
+};
+
 export const recipes: Recipe[] = [
   {
     id: '9',
