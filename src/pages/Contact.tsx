@@ -55,8 +55,8 @@ const Contact = () => {
               <div>
                 <h3 className="text-white font-semibold mb-1">Address</h3>
                 <p className="text-gray-300">
-                  123 Flavor Street<br />
-                  Lagos, Nigeria 100001
+                  3387 chapel oaks drive,<br />
+                  Coppell Texas 75019
                 </p>
               </div>
               

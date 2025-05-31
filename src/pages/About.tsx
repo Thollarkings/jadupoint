@@ -1,8 +1,8 @@
 
 const About = () => {
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen px-4 py-8 ">
+      <div className="max-w-5xl mx-auto w-full bg-dark-gradient">
         <div className="glass-card p-8 md:p-12 animate-fade-in">
           <h1 className="text-4xl font-bold text-white mb-8 text-center">
             About <span className="text-coral-400">JaduPoint</span>
@@ -16,14 +16,13 @@ const About = () => {
                 className="rounded-lg w-full h-64 object-cover"
               />
             </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-coral-400 mb-4">Our Story</h2>
-              <p className="text-gray-300 leading-relaxed">
-                JaduPoint was born from a passion for authentic Nigerian cuisine and the desire to share 
-                the magic of perfectly prepared Jollof rice with the world. Founded in 2020, we've been 
-                on a mission to bring traditional flavors to modern food lovers.
-              </p>
-            </div>
+<div>
+  <h2 className="text-2xl font-semibold text-coral-400 mb-4 text-center">Our Story</h2>
+  <p className="text-gray-300 leading-relaxed text-justify">
+    JaduPoint officially started in June 2024, but our journey with authentic Nigerian cuisine began over 15 years ago. Founded out of a passion for perfectly prepared Jollof rice, we are committed to sharing the rich, traditional flavors of Nigeria with today’s food lovers. Our mission is to blend time-honored recipes with a modern touch, delivering meals that celebrate heritage, quality, and unforgettable taste. At JaduPoint, every dish is crafted with care, pride, and a love for bringing people together through food. We also take special orders for big events such as weddings, anniversaries, and other celebrations, making your occasions truly memorable.
+  </p>
+</div>
+
           </div>
 
           <div className="mb-12">
