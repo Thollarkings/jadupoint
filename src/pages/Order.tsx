@@ -19,12 +19,7 @@ const Order = () => {
             <h1 className="text-4xl font-bold text-white mb-2">Order Jollof Rice</h1>
             <p className="text-gray-300">Choose your favorite flavors and add them to your cart</p>
           </div>
-          <Button 
-            onClick={() => setIsCartOpen(true)}
-            className="btn-coral"
-          >
-            View Cart
-          </Button>
+
         </div>
 
         {/* Recipes Grid */}
