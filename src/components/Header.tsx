@@ -83,7 +83,7 @@ const Header = () => {
               onClick={() => setShowCartSidebar(true)}
               className="relative p-2 hover:bg-white/10 rounded-lg transition-colors flex items-center text-gray-300 hover:text-white gap-2"
             >
-              View Cart
+              Cart
               <ShoppingCart className="h-6 w-6 text-coral-400" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-coral-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
