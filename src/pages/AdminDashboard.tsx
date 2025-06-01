@@ -3,26 +3,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/use-toast';
-import { supabase } from '../integrations/supabase/client';
+import { recipes, Recipe } from '../data/recipes';
 import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
 
-interface Recipe {
-  id: string;
-  name: string;
-  description: string;
-  full_description: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  price_medium: number;
-  price_large: number;
-  ingredients: string[];
-  cooking_time: string;
-  spice_level: string;
-}
-
 const AdminDashboard = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipeList, setRecipeList] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -44,29 +29,10 @@ const AdminDashboard = () => {
       return;
     }
     
-    fetchRecipes();
+    // Load static recipes data for now
+    setRecipeList(recipes);
+    setLoading(false);
   }, [navigate]);
-
-  const fetchRecipes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setRecipes(data || []);
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load recipes.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_logged_in');
@@ -83,27 +49,12 @@ const AdminDashboard = () => {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('recipes')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setRecipes(prev => prev.filter(recipe => recipe.id !== id));
-      toast({
-        title: "Recipe Deleted",
-        description: "Recipe has been deleted successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting recipe:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete recipe.",
-        variant: "destructive"
-      });
-    }
+    // For now, just remove from the local state
+    setRecipeList(prev => prev.filter(recipe => recipe.id !== id));
+    toast({
+      title: "Recipe Deleted",
+      description: "Recipe has been deleted successfully.",
+    });
   };
 
   if (loading) {
@@ -146,9 +97,9 @@ const AdminDashboard = () => {
 
         {/* Recipes List */}
         <div className="glass-card p-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Recipes ({recipes.length})</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Recipes ({recipeList.length})</h2>
           
-          {recipes.length === 0 ? (
+          {recipeList.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg mb-4">No recipes found</p>
               <Button 
@@ -160,7 +111,7 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recipes.map((recipe) => (
+              {recipeList.map((recipe) => (
                 <div key={recipe.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <img 
                     src={recipe.image} 
@@ -172,12 +123,12 @@ const AdminDashboard = () => {
                     <h3 className="text-white font-semibold text-lg">{recipe.name}</h3>
                     <p className="text-gray-400 text-sm line-clamp-2">{recipe.description}</p>
                     <div className="flex justify-between text-sm">
-                      <span className="text-coral-400">Medium: ${recipe.price_medium}</span>
-                      <span className="text-coral-400">Large: ${recipe.price_large}</span>
+                      <span className="text-coral-400">Medium: ${recipe.prices.medium}</span>
+                      <span className="text-coral-400">Large: ${recipe.prices.large}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-400">
                       <span>Rating: {recipe.rating}/5</span>
-                      <span>{recipe.spice_level}</span>
+                      <span>{recipe.spiceLevel}</span>
                     </div>
                   </div>
                   

@@ -1,3 +1,20 @@
+
+export interface Recipe {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  rating: number;
+  reviews: number;
+  prices: {
+    medium: number;
+    large: number;
+  };
+  ingredients: string[];
+  cookingTime: string;
+  spiceLevel: 'Mild' | 'Medium' | 'Hot';
+}
+
 export const recipes: Recipe[] = [
   {
     id: '9',
