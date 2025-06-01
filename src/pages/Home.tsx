@@ -1,11 +1,37 @@
 
 import { useState } from 'react';
-import { recipes, Recipe } from '../data/recipes';
+import { useRecipes, SupabaseRecipe } from '../hooks/useRecipes';
 import RecipeCard from '../components/RecipeCard';
 import RecipeDetailsPanel from '../components/RecipeDetailsPanel';
 
+// Convert Supabase recipe to legacy format for compatibility
+const convertRecipe = (recipe: SupabaseRecipe) => ({
+  id: recipe.id,
+  name: recipe.name,
+  description: recipe.description,
+  image: recipe.image,
+  rating: recipe.rating,
+  reviews: recipe.reviews,
+  prices: {
+    medium: recipe.medium_price,
+    large: recipe.large_price
+  },
+  ingredients: recipe.ingredients,
+  cookingTime: recipe.cooking_time || '',
+  spiceLevel: recipe.spice_level
+});
+
 const Home = () => {
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+  const { recipes, loading } = useRecipes();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-r from-black via-coral-900 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading delicious recipes...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-black via-coral-900 to-black">
@@ -15,13 +41,8 @@ const Home = () => {
           Taste of <span className="text-coral-400">Africa</span>
         </h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8 animate-fade-in">
-          Experience the authentic taste of perfectly crafted African cuisine , delivered fresh to your doorstep with the magic touch of tradition and love.
+          Experience the authentic taste of perfectly crafted African cuisine, delivered fresh to your doorstep with the magic touch of tradition and love.
         </p>
-{/*         <div className="animate-fade-in">
-          <a href="#recipes" className="btn-coral inline-block">
-            Explore Our Flavors
-          </a>
-        </div> */}
       </section>
 
       {/* Recipes Grid */}
@@ -35,8 +56,8 @@ const Home = () => {
             {recipes.map((recipe) => (
               <RecipeCard 
                 key={recipe.id} 
-                recipe={recipe} 
-                onClick={setSelectedRecipe}
+                recipe={convertRecipe(recipe)} 
+                onClick={(r) => setSelectedRecipe(r)}
               />
             ))}
           </div>

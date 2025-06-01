@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/use-toast';
-import { recipes, Recipe } from '../data/recipes';
+import { useRecipes } from '../hooks/useRecipes';
 import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const [recipeList, setRecipeList] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { recipes, loading, deleteRecipe } = useRecipes();
 
   useEffect(() => {
     // Check if admin is logged in
@@ -28,21 +28,7 @@ const AdminDashboard = () => {
       handleLogout();
       return;
     }
-    
-    // Load recipes data and refresh list
-    setRecipeList([...recipes]);
-    setLoading(false);
   }, [navigate]);
-
-  // Refresh recipe list when component becomes visible
-  useEffect(() => {
-    const handleFocus = () => {
-      setRecipeList([...recipes]);
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_logged_in');
@@ -55,22 +41,16 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteRecipe = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this recipe?')) {
-      return;
+    if (confirmDelete === id) {
+      await deleteRecipe(id);
+      setConfirmDelete(null);
+    } else {
+      setConfirmDelete(id);
+      // Auto-cancel confirmation after 3 seconds
+      setTimeout(() => {
+        setConfirmDelete(null);
+      }, 3000);
     }
-
-    // Remove from the recipes array
-    const recipeIndex = recipes.findIndex(recipe => recipe.id === id);
-    if (recipeIndex !== -1) {
-      recipes.splice(recipeIndex, 1);
-    }
-
-    // Update local state
-    setRecipeList(prev => prev.filter(recipe => recipe.id !== id));
-    toast({
-      title: "Recipe Deleted",
-      description: "Recipe has been deleted successfully.",
-    });
   };
 
   if (loading) {
@@ -113,9 +93,9 @@ const AdminDashboard = () => {
 
         {/* Recipes List */}
         <div className="glass-card p-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Recipes ({recipeList.length})</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Recipes ({recipes.length})</h2>
           
-          {recipeList.length === 0 ? (
+          {recipes.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg mb-4">No recipes found</p>
               <Button 
@@ -127,7 +107,7 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recipeList.map((recipe) => (
+              {recipes.map((recipe) => (
                 <div key={recipe.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <img 
                     src={recipe.image} 
@@ -139,12 +119,12 @@ const AdminDashboard = () => {
                     <h3 className="text-white font-semibold text-lg">{recipe.name}</h3>
                     <p className="text-gray-400 text-sm line-clamp-2">{recipe.description}</p>
                     <div className="flex justify-between text-sm">
-                      <span className="text-coral-400">Medium: ${recipe.prices.medium}</span>
-                      <span className="text-coral-400">Large: ${recipe.prices.large}</span>
+                      <span className="text-coral-400">Medium: ${recipe.medium_price}</span>
+                      <span className="text-coral-400">Large: ${recipe.large_price}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-400">
                       <span>Rating: {recipe.rating}/5</span>
-                      <span>{recipe.spiceLevel}</span>
+                      <span>{recipe.spice_level}</span>
                     </div>
                   </div>
                   
@@ -162,10 +142,12 @@ const AdminDashboard = () => {
                       onClick={() => handleDeleteRecipe(recipe.id)}
                       size="sm"
                       variant="destructive"
-                      className="flex-1 flex items-center justify-center gap-1"
+                      className={`flex-1 flex items-center justify-center gap-1 ${
+                        confirmDelete === recipe.id ? 'bg-red-600 hover:bg-red-700' : ''
+                      }`}
                     >
                       <Trash2 className="h-4 w-4" />
-                      Delete
+                      {confirmDelete === recipe.id ? 'Confirm?' : 'Delete'}
                     </Button>
                   </div>
                 </div>
