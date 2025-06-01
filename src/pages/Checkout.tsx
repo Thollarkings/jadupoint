@@ -4,7 +4,6 @@ import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../integrations/supabase/client';
 import { useToast } from '../hooks/use-toast';
 
 const Checkout = () => {
@@ -26,9 +25,10 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      // Prepare order data to pass to payment page
       const orderData = {
-        items: JSON.parse(JSON.stringify(items)), // Convert to plain JSON
-        total_amount: total,
+        items: JSON.parse(JSON.stringify(items)),
+        total: total,
         user_id: user?.id || null,
         guest_name: user ? null : guestInfo.name,
         guest_email: user ? null : guestInfo.email,
@@ -37,24 +37,26 @@ const Checkout = () => {
         status: 'pending'
       };
 
-      const { error } = await supabase
-        .from('orders')
-        .insert(orderData); // Remove the array wrapper
+      const customerInfo = {
+        name: user ? user.email?.split('@')[0] || '' : guestInfo.name,
+        email: user ? user.email : guestInfo.email,
+        phone: guestInfo.phone,
+        address: guestInfo.address
+      };
 
-      if (error) throw error;
-
-      toast({
-        title: "Order Placed Successfully!",
-        description: "We'll prepare your delicious Jollof rice right away.",
+      // Navigate to payment page with order data
+      navigate('/payment', {
+        state: {
+          orderData,
+          customerInfo
+        }
       });
 
-      clearCart();
-      navigate('/');
     } catch (error) {
-      console.error('Error placing order:', error);
+      console.error('Error preparing order:', error);
       toast({
         title: "Error",
-        description: "Failed to place order. Please try again.",
+        description: "Failed to proceed to payment. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -77,7 +79,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8">
+    <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-white mb-8">Checkout</h1>
         
@@ -174,7 +176,7 @@ const Checkout = () => {
                 className="w-full btn-coral text-lg py-4"
                 disabled={loading}
               >
-                {loading ? 'Placing Order...' : `Place Order - $${total.toFixed(2)}`}
+                {loading ? 'Processing...' : `Place Order - $${total.toFixed(2)}`}
               </Button>
             </form>
           </div>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 
 const About = () => {
   return (
@@ -99,6 +100,16 @@ const About = () => {
                 </ul>
               </div>
             </div>
+          </div>
+
+          {/* Admin Login Link */}
+          <div className="mt-12 pt-8 border-t border-white/10 text-center">
+            <Link 
+              to="/admin/login"
+              className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
+            >
+              Admin Access
+            </Link>
           </div>
         </div>
       </div>
