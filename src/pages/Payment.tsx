@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -12,13 +11,13 @@ interface PaymentData {
   expiryDate: string;
   cvv: string;
   billingAddress: string;
+  phone: string;
 }
 
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get order data and customer info from checkout
   const orderData = location.state?.orderData;
   const customerInfo = location.state?.customerInfo;
   
@@ -28,19 +27,18 @@ const Payment = () => {
     cardNumber: '',
     expiryDate: '',
     cvv: '',
-    billingAddress: customerInfo?.address || ''
+    billingAddress: customerInfo?.address || '',
+    phone: customerInfo?.phone || ''
   });
   
   const [errors, setErrors] = useState<Partial<PaymentData>>({});
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Initialize EmailJS
   useEffect(() => {
     emailjs.init('VvF5HuAWU3b9UV75I');
   }, []);
 
   useEffect(() => {
-    // Redirect if no order data
     if (!orderData || !orderData.items || orderData.items.length === 0) {
       navigate('/order');
     }
@@ -93,6 +91,10 @@ const Payment = () => {
       newErrors.billingAddress = 'Billing address is required';
     }
     
+    if (!paymentData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -106,6 +108,10 @@ const Payment = () => {
     
     if (!paymentData.billingAddress.trim()) {
       newErrors.billingAddress = 'Delivery address is required';
+    }
+    
+    if (!paymentData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
     }
     
     setErrors(newErrors);
@@ -125,7 +131,6 @@ const Payment = () => {
     
     setPaymentData(prev => ({ ...prev, [field]: formattedValue }));
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -140,8 +145,10 @@ const Payment = () => {
     ).join('\n');
 
     const templateParams = {
+      title: orderItemsText,
       name: paymentData.cardholderName,
       email: customerInfo?.email || 'customer@example.com',
+      processing_time: `within one hour`,
       message: `Order Confirmation - Payment on Delivery
 
 Order Details:
@@ -149,6 +156,7 @@ ${orderItemsText}
 
 Total: $${orderData.total.toFixed(2)}
 Payment Method: Payment on Delivery
+Phone: ${paymentData.phone}
 Delivery Address: ${paymentData.billingAddress}
 
 Your order has been confirmed and will be prepared for delivery. Payment will be collected upon delivery.
@@ -174,13 +182,11 @@ Thank you for choosing JaduPoint!`
     
     try {
       if (paymentMethod === 'delivery') {
-        // Send order confirmation email for Payment on Delivery
         await sendOrderConfirmationEmail();
         
         alert('Order confirmed! You will receive a confirmation email shortly. Payment will be collected upon delivery.');
         navigate('/');
       } else {
-        // Simulate card payment processing
         setTimeout(() => {
           setIsProcessing(false);
           alert('Payment page completed! (Card payment processing not implemented yet)');
@@ -268,7 +274,7 @@ Thank you for choosing JaduPoint!`
                 </RadioGroup>
               </div>
 
-              {/* Customer Name (always shown) */}
+              {/* Customer Name */}
               <div>
                 <label className="block text-gray-300 mb-2">
                   {paymentMethod === 'card' ? 'Cardholder Name *' : 'Full Name *'}
@@ -285,6 +291,24 @@ Thank you for choosing JaduPoint!`
                 />
                 {errors.cardholderName && (
                   <p className="text-red-400 text-sm mt-1">{errors.cardholderName}</p>
+                )}
+              </div>
+
+              {/* Phone Number (always shown) */}
+              <div>
+                <label className="block text-gray-300 mb-2">Phone Number *</label>
+                <input
+                  type="tel"
+                  value={paymentData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
+                    errors.phone ? 'border-red-500' : 'border-white/20'
+                  }`}
+                  placeholder="Enter your phone number"
+                  required
+                />
+                {errors.phone && (
+                  <p className="text-red-400 text-sm mt-1">{errors.phone}</p>
                 )}
               </div>
 

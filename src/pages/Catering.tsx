@@ -4,6 +4,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
 import emailjs from '@emailjs/browser'; // Uncomment if using EmailJS
+import { title } from 'process';
 
 const jollofDishes = [
   // Original jollof dishes
@@ -102,7 +103,23 @@ Event Date: ${formData.eventDate}
 Phone: ${formData.phone}
 Additional Information: ${formData.additionalInfo || 'None provided'}
     `;
+    const clientMessage = `
+${formData.name}'s Event Booking Request:
+---------------------------------
+Selected Jollof Dish: ${jollofDishes[selectedDishIndex].name} ($${dishPrice}/person)
+Number of People: ${numPeople}
+Subtotal: $${subtotal.toFixed(2)}
+Labour for the Day: $${labour.toFixed(2)}
+Tax (8.25%): $${tax.toFixed(2)}
+Total: $${total.toFixed(2)}
+
+Event Type: ${formData.eventType}
+Event Date: ${formData.eventDate}
+Phone: ${formData.phone}
+Additional Information: ${formData.additionalInfo || 'None provided'}`;
+
     const templateParams = {
+      title: `${formData.name}'s Event Booking Request`,
       name: formData.name,
       email: formData.email,
       message: formattedMessage,
@@ -175,8 +192,7 @@ Additional Information: ${formData.additionalInfo || 'None provided'}
                 <label className="block text-gray-300 mb-2">Choose Your Jollof Dish</label>
                 <div className="relative">
                   <select
-                    className="w-full p-3 border border-gray-700 rounded-xl text-white bg-coral-900"
-                    style={{ backgroundImage: 'linear-gradient(to right,rgb(35, 1, 51),rgb(42, 10, 43),rgb(24, 2, 40))' }}
+                    className="w-full pt-4 pb-4 pl-3 pr-6 border border-gray-700 rounded-xl text-white bg-coral-900"
                     value={selectedDishIndex}
                     onChange={e => setSelectedDishIndex(Number(e.target.value))}
                   >
@@ -184,9 +200,9 @@ Additional Information: ${formData.additionalInfo || 'None provided'}
                       <option key={dish.name} value={idx}>{dish.name}</option>
                     ))}
                   </select>
-                  <span className="absolute right-3 top-3 text-gray-400">
-                    <svg width="24" height="24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                  </span>
+{/*                   <span className="absolute right-3 top-3 text-gray-400">
+                    <svg width="" height="24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  </span> */}
                 </div>
                 {/* Display selected dish details */}
                 <div className="mt-4 bg-gradient-to-r from-black via-coral-900 to-black p-4 rounded-2xl">
