@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
+import emailjs from '@emailjs/browser';
 
 interface PaymentData {
   cardholderName: string;
@@ -20,6 +22,7 @@ const Payment = () => {
   const orderData = location.state?.orderData;
   const customerInfo = location.state?.customerInfo;
   
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [paymentData, setPaymentData] = useState<PaymentData>({
     cardholderName: customerInfo?.name || '',
     cardNumber: '',
@@ -30,6 +33,11 @@ const Payment = () => {
   
   const [errors, setErrors] = useState<Partial<PaymentData>>({});
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Initialize EmailJS
+  useEffect(() => {
+    emailjs.init('VvF5HuAWU3b9UV75I');
+  }, []);
 
   useEffect(() => {
     // Redirect if no order data
@@ -61,7 +69,7 @@ const Payment = () => {
     return v;
   };
 
-  const validateForm = () => {
+  const validateCardForm = () => {
     const newErrors: Partial<PaymentData> = {};
     
     if (!paymentData.cardholderName.trim()) {
@@ -89,6 +97,21 @@ const Payment = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateDeliveryForm = () => {
+    const newErrors: Partial<PaymentData> = {};
+    
+    if (!paymentData.cardholderName.trim()) {
+      newErrors.cardholderName = 'Name is required';
+    }
+    
+    if (!paymentData.billingAddress.trim()) {
+      newErrors.billingAddress = 'Delivery address is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (field: keyof PaymentData, value: string) => {
     let formattedValue = value;
     
@@ -108,22 +131,71 @@ const Payment = () => {
     }
   };
 
+  const sendOrderConfirmationEmail = async () => {
+    const serviceID = 'service_nhkj0mp';
+    const templateID = 'template_r7qndos';
+
+    const orderItemsText = orderData.items.map((item: any) => 
+      `${item.name} (${item.size}) x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
+    ).join('\n');
+
+    const templateParams = {
+      name: paymentData.cardholderName,
+      email: customerInfo?.email || 'customer@example.com',
+      message: `Order Confirmation - Payment on Delivery
+
+Order Details:
+${orderItemsText}
+
+Total: $${orderData.total.toFixed(2)}
+Payment Method: Payment on Delivery
+Delivery Address: ${paymentData.billingAddress}
+
+Your order has been confirmed and will be prepared for delivery. Payment will be collected upon delivery.
+
+Thank you for choosing JaduPoint!`
+    };
+
+    return emailjs.send(serviceID, templateID, templateParams);
+  };
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (paymentMethod === 'card' && !validateCardForm()) {
+      return;
+    }
+    
+    if (paymentMethod === 'delivery' && !validateDeliveryForm()) {
       return;
     }
     
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      // For now, just show an alert since we're not implementing actual payment
-      alert('Payment page completed! (Payment processing not implemented yet)');
+    try {
+      if (paymentMethod === 'delivery') {
+        // Send order confirmation email for Payment on Delivery
+        await sendOrderConfirmationEmail();
+        
+        alert('Order confirmed! You will receive a confirmation email shortly. Payment will be collected upon delivery.');
+        navigate('/');
+      } else {
+        // Simulate card payment processing
+        setTimeout(() => {
+          setIsProcessing(false);
+          alert('Payment page completed! (Card payment processing not implemented yet)');
+          navigate('/');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Failed to send confirmation email:', error);
+      alert('Order confirmed but failed to send confirmation email. Please contact us if you need assistance.');
       navigate('/');
-    }, 2000);
+    }
+    
+    if (paymentMethod === 'delivery') {
+      setIsProcessing(false);
+    }
   };
 
   if (!orderData) {
@@ -181,8 +253,26 @@ const Payment = () => {
             <h2 className="text-2xl font-bold text-white mb-4">Payment Information</h2>
             
             <form onSubmit={handlePayment} className="space-y-4">
+              {/* Payment Method Selection */}
+              <div className="mb-6">
+                <label className="block text-gray-300 mb-3">Payment Method</label>
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="card" id="card" className="border-white/20 text-coral-400" />
+                    <label htmlFor="card" className="text-white cursor-pointer">Credit/Debit Card</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="delivery" id="delivery" className="border-white/20 text-coral-400" />
+                    <label htmlFor="delivery" className="text-white cursor-pointer">Payment on Delivery</label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Customer Name (always shown) */}
               <div>
-                <label className="block text-gray-300 mb-2">Cardholder Name *</label>
+                <label className="block text-gray-300 mb-2">
+                  {paymentMethod === 'card' ? 'Cardholder Name *' : 'Full Name *'}
+                </label>
                 <input
                   type="text"
                   value={paymentData.cardholderName}
@@ -190,80 +280,88 @@ const Payment = () => {
                   className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
                     errors.cardholderName ? 'border-red-500' : 'border-white/20'
                   }`}
-                  placeholder="Enter cardholder name"
-                  autoComplete="cc-name"
+                  placeholder={paymentMethod === 'card' ? 'Enter cardholder name' : 'Enter your full name'}
+                  autoComplete="name"
                 />
                 {errors.cardholderName && (
                   <p className="text-red-400 text-sm mt-1">{errors.cardholderName}</p>
                 )}
               </div>
+
+              {/* Card Details (only shown for card payment) */}
+              {paymentMethod === 'card' && (
+                <>
+                  <div>
+                    <label className="block text-gray-300 mb-2">Card Number *</label>
+                    <input
+                      type="text"
+                      value={paymentData.cardNumber}
+                      onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                      className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
+                        errors.cardNumber ? 'border-red-500' : 'border-white/20'
+                      }`}
+                      placeholder="1234 5678 9012 3456"
+                      maxLength={19}
+                      autoComplete="cc-number"
+                    />
+                    {errors.cardNumber && (
+                      <p className="text-red-400 text-sm mt-1">{errors.cardNumber}</p>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-300 mb-2">Expiry Date *</label>
+                      <input
+                        type="text"
+                        value={paymentData.expiryDate}
+                        onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                        className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
+                          errors.expiryDate ? 'border-red-500' : 'border-white/20'
+                        }`}
+                        placeholder="MM/YY"
+                        maxLength={5}
+                        autoComplete="cc-exp"
+                      />
+                      {errors.expiryDate && (
+                        <p className="text-red-400 text-sm mt-1">{errors.expiryDate}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-300 mb-2">CVV *</label>
+                      <input
+                        type="password"
+                        value={paymentData.cvv}
+                        onChange={(e) => handleInputChange('cvv', e.target.value)}
+                        className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
+                          errors.cvv ? 'border-red-500' : 'border-white/20'
+                        }`}
+                        placeholder="123"
+                        maxLength={4}
+                        autoComplete="cc-csc"
+                      />
+                      {errors.cvv && (
+                        <p className="text-red-400 text-sm mt-1">{errors.cvv}</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
               
+              {/* Address */}
               <div>
-                <label className="block text-gray-300 mb-2">Card Number *</label>
-                <input
-                  type="text"
-                  value={paymentData.cardNumber}
-                  onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                  className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
-                    errors.cardNumber ? 'border-red-500' : 'border-white/20'
-                  }`}
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
-                  autoComplete="cc-number"
-                />
-                {errors.cardNumber && (
-                  <p className="text-red-400 text-sm mt-1">{errors.cardNumber}</p>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-300 mb-2">Expiry Date *</label>
-                  <input
-                    type="text"
-                    value={paymentData.expiryDate}
-                    onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                    className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
-                      errors.expiryDate ? 'border-red-500' : 'border-white/20'
-                    }`}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                    autoComplete="cc-exp"
-                  />
-                  {errors.expiryDate && (
-                    <p className="text-red-400 text-sm mt-1">{errors.expiryDate}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-gray-300 mb-2">CVV *</label>
-                  <input
-                    type="password"
-                    value={paymentData.cvv}
-                    onChange={(e) => handleInputChange('cvv', e.target.value)}
-                    className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 ${
-                      errors.cvv ? 'border-red-500' : 'border-white/20'
-                    }`}
-                    placeholder="123"
-                    maxLength={4}
-                    autoComplete="cc-csc"
-                  />
-                  {errors.cvv && (
-                    <p className="text-red-400 text-sm mt-1">{errors.cvv}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-gray-300 mb-2">Billing Address *</label>
+                <label className="block text-gray-300 mb-2">
+                  {paymentMethod === 'card' ? 'Billing Address *' : 'Delivery Address *'}
+                </label>
                 <textarea
                   value={paymentData.billingAddress}
                   onChange={(e) => handleInputChange('billingAddress', e.target.value)}
                   className={`w-full p-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 h-24 resize-none ${
                     errors.billingAddress ? 'border-red-500' : 'border-white/20'
                   }`}
-                  placeholder="Enter your billing address"
-                  autoComplete="billing street-address"
+                  placeholder={paymentMethod === 'card' ? 'Enter your billing address' : 'Enter your delivery address'}
+                  autoComplete={paymentMethod === 'card' ? 'billing street-address' : 'shipping street-address'}
                 />
                 {errors.billingAddress && (
                   <p className="text-red-400 text-sm mt-1">{errors.billingAddress}</p>
@@ -275,13 +373,16 @@ const Payment = () => {
                 className="w-full btn-coral text-lg py-4"
                 disabled={isProcessing}
               >
-                {isProcessing ? 'Processing Payment...' : `Pay Now - $${orderData.total.toFixed(2)}`}
+                {isProcessing ? 
+                  (paymentMethod === 'card' ? 'Processing Payment...' : 'Confirming Order...') : 
+                  (paymentMethod === 'card' ? `Pay Now - $${orderData.total.toFixed(2)}` : `Confirm Order - $${orderData.total.toFixed(2)}`)
+                }
               </Button>
             </form>
             
             <div className="flex items-center justify-center mt-4 text-gray-400 text-sm">
               <span className="mr-2">🔒</span>
-              Secure Payment - Your data is safe
+              {paymentMethod === 'card' ? 'Secure Payment - Your data is safe' : 'Secure Order - Payment on delivery'}
             </div>
           </div>
         </div>
