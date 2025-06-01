@@ -29,10 +29,20 @@ const AdminDashboard = () => {
       return;
     }
     
-    // Load static recipes data for now
-    setRecipeList(recipes);
+    // Load recipes data and refresh list
+    setRecipeList([...recipes]);
     setLoading(false);
   }, [navigate]);
+
+  // Refresh recipe list when component becomes visible
+  useEffect(() => {
+    const handleFocus = () => {
+      setRecipeList([...recipes]);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_logged_in');
@@ -49,7 +59,13 @@ const AdminDashboard = () => {
       return;
     }
 
-    // For now, just remove from the local state
+    // Remove from the recipes array
+    const recipeIndex = recipes.findIndex(recipe => recipe.id === id);
+    if (recipeIndex !== -1) {
+      recipes.splice(recipeIndex, 1);
+    }
+
+    // Update local state
     setRecipeList(prev => prev.filter(recipe => recipe.id !== id));
     toast({
       title: "Recipe Deleted",

@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/use-toast';
-import { ArrowLeft, Plus } from 'lucide-react';
-import { Recipe } from '../data/recipes';
+import { ArrowLeft, Plus, Upload } from 'lucide-react';
+import { Recipe, recipes } from '../data/recipes';
 
 const AddRecipe = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +15,8 @@ const AddRecipe = () => {
     cookingTime: '',
     spiceLevel: 'Medium' as 'Mild' | 'Medium' | 'Hot'
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -29,6 +30,20 @@ const AddRecipe = () => {
       }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setImagePreview(result);
+        setFormData(prev => ({ ...prev, image: result }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -66,9 +81,27 @@ const AddRecipe = () => {
     }
 
     try {
-      // For now, just simulate adding the recipe
-      // In a real app, you'd save to database here
-      console.log('Adding recipe:', formData);
+      // Create new recipe object
+      const newRecipe: Recipe = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: formData.name,
+        description: formData.description,
+        image: formData.image,
+        rating: 4.5, // Default rating
+        reviews: 0, // Default reviews
+        prices: {
+          medium: parseFloat(formData.prices.medium),
+          large: parseFloat(formData.prices.large)
+        },
+        ingredients: formData.ingredients.filter(ingredient => ingredient.trim() !== ''),
+        cookingTime: formData.cookingTime,
+        spiceLevel: formData.spiceLevel
+      };
+
+      // Add to recipes array (in a real app, this would be saved to database)
+      recipes.push(newRecipe);
+      
+      console.log('Adding recipe:', newRecipe);
       
       toast({
         title: "Recipe Added",
@@ -127,15 +160,38 @@ const AddRecipe = () => {
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Image URL *</label>
-              <input
-                type="url"
-                value={formData.image}
-                onChange={(e) => handleInputChange('image', e.target.value)}
-                className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
-                placeholder="Enter image URL"
-                required
-              />
+              <label className="block text-gray-300 mb-2">Recipe Image *</label>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                    required
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="flex items-center gap-2 px-4 py-2 bg-coral-600 hover:bg-coral-700 text-white rounded-lg cursor-pointer transition-colors"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Choose Image
+                  </label>
+                  {imageFile && (
+                    <span className="text-gray-300 text-sm">{imageFile.name}</span>
+                  )}
+                </div>
+                {imagePreview && (
+                  <div className="mt-4">
+                    <img
+                      src={imagePreview}
+                      alt="Recipe preview"
+                      className="w-32 h-32 object-cover rounded-lg border border-white/20"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
