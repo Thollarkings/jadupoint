@@ -20,6 +20,32 @@ export interface SupabaseRecipe {
   updated_at: string;
 }
 
+// Helper function to ensure spice_level is properly typed
+const normalizeSpiceLevel = (spiceLevel: string): 'Mild' | 'Medium' | 'Hot' => {
+  if (spiceLevel === 'Mild' || spiceLevel === 'Medium' || spiceLevel === 'Hot') {
+    return spiceLevel;
+  }
+  return 'Medium'; // Default fallback
+};
+
+// Helper function to convert raw Supabase data to typed recipe
+const convertSupabaseRecipe = (rawRecipe: any): SupabaseRecipe => ({
+  id: rawRecipe.id,
+  name: rawRecipe.name,
+  description: rawRecipe.description,
+  full_description: rawRecipe.full_description,
+  image: rawRecipe.image,
+  rating: rawRecipe.rating || 4.5,
+  reviews: rawRecipe.reviews || 0,
+  medium_price: rawRecipe.medium_price,
+  large_price: rawRecipe.large_price,
+  ingredients: rawRecipe.ingredients || [],
+  cooking_time: rawRecipe.cooking_time,
+  spice_level: normalizeSpiceLevel(rawRecipe.spice_level),
+  created_at: rawRecipe.created_at,
+  updated_at: rawRecipe.updated_at,
+});
+
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<SupabaseRecipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +62,9 @@ export const useRecipes = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRecipes(data || []);
+      
+      const typedRecipes = (data || []).map(convertSupabaseRecipe);
+      setRecipes(typedRecipes);
       setError(null);
     } catch (err) {
       console.error('Error fetching recipes:', err);
@@ -62,12 +90,13 @@ export const useRecipes = () => {
 
       if (error) throw error;
       
-      setRecipes(prev => [data, ...prev]);
+      const typedRecipe = convertSupabaseRecipe(data);
+      setRecipes(prev => [typedRecipe, ...prev]);
       toast({
         title: "Success",
         description: "Recipe added successfully",
       });
-      return { success: true, data };
+      return { success: true, data: typedRecipe };
     } catch (err) {
       console.error('Error adding recipe:', err);
       toast({
@@ -91,12 +120,13 @@ export const useRecipes = () => {
 
       if (error) throw error;
       
-      setRecipes(prev => prev.map(recipe => recipe.id === id ? data : recipe));
+      const typedRecipe = convertSupabaseRecipe(data);
+      setRecipes(prev => prev.map(recipe => recipe.id === id ? typedRecipe : recipe));
       toast({
         title: "Success",
         description: "Recipe updated successfully",
       });
-      return { success: true, data };
+      return { success: true, data: typedRecipe };
     } catch (err) {
       console.error('Error updating recipe:', err);
       toast({
