@@ -35,11 +35,13 @@ const normalizeImageUrl = (imagePath: string): string => {
     return imagePath;
   }
   
-  // If it starts with /, remove it to make it relative
-  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  // If it starts with /, it's already a proper path from root
+  if (imagePath.startsWith('/')) {
+    return imagePath;
+  }
   
-  // Convert to full URL using current origin
-  return `${window.location.origin}/${cleanPath}`;
+  // If it's a relative path without /, add / prefix
+  return `/${imagePath}`;
 };
 
 // Helper function to convert raw Supabase data to typed recipe
@@ -86,7 +88,7 @@ export const useRecipes = () => {
       const typedRecipes = (data || []).map(convertSupabaseRecipe);
       setRecipes(typedRecipes);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching recipes:', err);
       setError('Failed to load recipes');
       toast({
@@ -99,17 +101,25 @@ export const useRecipes = () => {
     }
   };
 
-  // Add new recipe (bypassing RLS for admin functionality)
+  // Add new recipe
   const addRecipe = async (recipeData: Omit<SupabaseRecipe, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       console.log('Adding recipe:', recipeData);
       
-      // Use service role or bypass RLS by using the anon key without authentication
       const { data, error } = await supabase
         .from('recipes')
         .insert([{
-          ...recipeData,
-          image: recipeData.image.startsWith('http') ? recipeData.image : recipeData.image
+          name: recipeData.name,
+          description: recipeData.description,
+          full_description: recipeData.full_description,
+          image: recipeData.image,
+          rating: recipeData.rating,
+          reviews: recipeData.reviews,
+          medium_price: recipeData.medium_price,
+          large_price: recipeData.large_price,
+          ingredients: recipeData.ingredients,
+          cooking_time: recipeData.cooking_time,
+          spice_level: recipeData.spice_level
         }])
         .select()
         .single();
@@ -127,18 +137,18 @@ export const useRecipes = () => {
         description: "Recipe added successfully",
       });
       return { success: true, data: typedRecipe };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding recipe:', err);
       toast({
         title: "Error",
-        description: "Failed to add recipe. Please try again.",
+        description: `Failed to add recipe: ${err.message}`,
         variant: "destructive"
       });
       return { success: false, error: err };
     }
   };
 
-  // Update recipe (bypassing RLS for admin functionality)
+  // Update recipe
   const updateRecipe = async (id: string, recipeData: Partial<SupabaseRecipe>) => {
     try {
       console.log('Updating recipe:', id, recipeData);
@@ -176,11 +186,11 @@ export const useRecipes = () => {
         description: "Recipe updated successfully",
       });
       return { success: true, data: typedRecipe };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating recipe:', err);
       toast({
         title: "Error",
-        description: "Failed to update recipe. Please try again.",
+        description: `Failed to update recipe: ${err.message}`,
         variant: "destructive"
       });
       return { success: false, error: err };
@@ -209,11 +219,11 @@ export const useRecipes = () => {
         description: "Recipe deleted successfully",
       });
       return { success: true };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting recipe:', err);
       toast({
         title: "Error",
-        description: "Failed to delete recipe. Please try again.",
+        description: `Failed to delete recipe: ${err.message}`,
         variant: "destructive"
       });
       return { success: false, error: err };
