@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from './use-toast';
 
+// Move interface and helper function outside the hook
 export interface SupabaseRecipe {
   id: string;
   name: string;
@@ -20,61 +20,57 @@ export interface SupabaseRecipe {
   updated_at: string;
 }
 
-// Helper function to ensure spice_level is properly typed
-const normalizeSpiceLevel = (spiceLevel: string): 'Mild' | 'Medium' | 'Hot' => {
-  if (spiceLevel === 'Mild' || spiceLevel === 'Medium' || spiceLevel === 'Hot') {
-    return spiceLevel;
+const toSupabaseRecipe = (recipe: any): SupabaseRecipe => {
+  let spiceLevel: 'Mild' | 'Medium' | 'Hot' = 'Medium';
+  const spiceInput = (recipe.spice_level || '').toString().trim().toLowerCase();
+  
+  if (spiceInput === 'hot') spiceLevel = 'Hot';
+  else if (spiceInput === 'mild') spiceLevel = 'Mild';
+
+  let ingredients: string[] = [];
+  if (Array.isArray(recipe.ingredients)) {
+    ingredients = recipe.ingredients.map((i: any) => i.toString());
+  } else if (typeof recipe.ingredients === 'string') {
+    try {
+      ingredients = JSON.parse(recipe.ingredients);
+    } catch {
+      ingredients = [recipe.ingredients];
+    }
   }
-  return 'Medium'; // Default fallback
+
+  const parseNumber = (value: any, defaultValue: number = 0): number => {
+    if (typeof value === 'number') return value;
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+  };
+
+  return {
+    id: recipe.id?.toString() || '',
+    name: recipe.name?.toString() || 'Unnamed Recipe',
+    description: recipe.description?.toString() || '',
+    full_description: recipe.full_description?.toString(),
+    image: recipe.image?.toString() || '',
+    rating: parseNumber(recipe.rating, 4.5),
+    reviews: parseNumber(recipe.reviews, 0),
+    medium_price: parseNumber(recipe.medium_price),
+    large_price: parseNumber(recipe.large_price),
+    ingredients,
+    cooking_time: recipe.cooking_time?.toString(),
+    spice_level: spiceLevel,
+    created_at: recipe.created_at?.toString() || new Date().toISOString(),
+    updated_at: recipe.updated_at?.toString() || new Date().toISOString(),
+  };
 };
 
-// Helper function to convert relative image paths to full URLs
-const normalizeImageUrl = (imagePath: string): string => {
-  // If it's already a full URL, return as is
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
-  }
-  
-  // If it's a data URL (base64), return as is
-  if (imagePath.startsWith('data:')) {
-    return imagePath;
-  }
-  
-  // If it starts with /, it's already a proper path from root
-  if (imagePath.startsWith('/')) {
-    return imagePath;
-  }
-  
-  // If it's a relative path without /, add / prefix
-  return `/${imagePath}`;
-};
-
-// Helper function to convert raw Supabase data to typed recipe
-const convertSupabaseRecipe = (rawRecipe: any): SupabaseRecipe => ({
-  id: rawRecipe.id,
-  name: rawRecipe.name,
-  description: rawRecipe.description,
-  full_description: rawRecipe.full_description,
-  image: normalizeImageUrl(rawRecipe.image),
-  rating: rawRecipe.rating || 4.5,
-  reviews: rawRecipe.reviews || 0,
-  medium_price: rawRecipe.medium_price,
-  large_price: rawRecipe.large_price,
-  ingredients: rawRecipe.ingredients || [],
-  cooking_time: rawRecipe.cooking_time,
-  spice_level: normalizeSpiceLevel(rawRecipe.spice_level),
-  created_at: rawRecipe.created_at,
-  updated_at: rawRecipe.updated_at,
-});
-
+// Main hook function
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<SupabaseRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fetch recipes from Supabase (public access)
-  const fetchRecipes = async () => {
+  // Memoize fetchRecipes to prevent unnecessary recreations
+  const fetchRecipes = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Fetching recipes from Supabase...');
@@ -84,14 +80,9 @@ export const useRecipes = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase fetch error:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
+      if (error) throw error;
       
-      console.log('Fetched recipes:', data);
-      const typedRecipes = (data || []).map(convertSupabaseRecipe);
-      setRecipes(typedRecipes);
+      setRecipes((data || []).map(toSupabaseRecipe));
       setError(null);
     } catch (err: any) {
       console.error('Error fetching recipes:', err);
@@ -105,10 +96,9 @@ export const useRecipes = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Add new recipe
-  const addRecipe = async (recipeData: Omit<SupabaseRecipe, 'id' | 'created_at' | 'updated_at'>) => {
+  const addRecipe = useCallback(async (recipeData: Omit<SupabaseRecipe, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       console.log('Adding recipe:', recipeData);
       
@@ -124,17 +114,8 @@ export const useRecipes = () => {
       const { data, error } = await supabase
         .from('recipes')
         .insert([{
-          name: recipeData.name,
-          description: recipeData.description,
-          full_description: recipeData.full_description,
-          image: recipeData.image,
-          rating: recipeData.rating,
-          reviews: recipeData.reviews,
-          medium_price: recipeData.medium_price,
-          large_price: recipeData.large_price,
-          ingredients: recipeData.ingredients,
-          cooking_time: recipeData.cooking_time,
-          spice_level: recipeData.spice_level
+          ...recipeData,
+          ingredients: `{${recipeData.ingredients.join(',')}}`
         }])
         .select()
         .single();
@@ -144,15 +125,13 @@ export const useRecipes = () => {
         throw new Error(`Database error: ${error.message}`);
       }
       
-      console.log('Recipe added successfully:', data);
-      const typedRecipe = convertSupabaseRecipe(data);
-      setRecipes(prev => [typedRecipe, ...prev]);
+      setRecipes(prev => [toSupabaseRecipe(data), ...prev]);
       toast({
         title: "Success",
         description: "Recipe added successfully",
       });
-      return { success: true, data: typedRecipe };
-    } catch (err: any) {
+      return { success: true, data: toSupabaseRecipe(data) };
+    } catch (err) {
       console.error('Error adding recipe:', err);
       const errorMessage = err.message || 'Unknown error occurred';
       toast({
@@ -162,51 +141,37 @@ export const useRecipes = () => {
       });
       return { success: false, error: err };
     }
-  };
+  }, [toast]);
 
-  // Update recipe
-  const updateRecipe = async (id: string, recipeData: Partial<SupabaseRecipe>) => {
+  const updateRecipe = useCallback(async (id: string, recipeData: Partial<SupabaseRecipe>) => {
     try {
-      console.log('Updating recipe:', id, recipeData);
+      const updateData = { ...recipeData };
       
-      if (!id) {
-        throw new Error('Recipe ID is required');
+      if (updateData.ingredients) {
+        updateData.ingredients = `{${updateData.ingredients.join(',')}}`;
       }
-      
-      const updateData = {
-        ...recipeData,
-        updated_at: new Date().toISOString()
-      };
-      
-      // Remove id, created_at from update data if present
-      delete updateData.id;
-      delete updateData.created_at;
-      
+
       const { data, error } = await supabase
         .from('recipes')
-        .update(updateData)
+        .update({ 
+          ...updateData, 
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', id)
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
+      if (error) throw error;
       
-      if (!data) {
-        throw new Error('No recipe found with the given ID');
-      }
-      
-      console.log('Recipe updated successfully:', data);
-      const typedRecipe = convertSupabaseRecipe(data);
-      setRecipes(prev => prev.map(recipe => recipe.id === id ? typedRecipe : recipe));
+      setRecipes(prev => prev.map(recipe => 
+        recipe.id === id ? toSupabaseRecipe(data) : recipe
+      ));
       toast({
         title: "Success",
         description: "Recipe updated successfully",
       });
-      return { success: true, data: typedRecipe };
-    } catch (err: any) {
+      return { success: true, data: toSupabaseRecipe(data) };
+    } catch (err) {
       console.error('Error updating recipe:', err);
       const errorMessage = err.message || 'Unknown error occurred';
       toast({
@@ -216,10 +181,9 @@ export const useRecipes = () => {
       });
       return { success: false, error: err };
     }
-  };
+  }, [toast]);
 
-  // Delete recipe
-  const deleteRecipe = async (id: string) => {
+  const deleteRecipe = useCallback(async (id: string) => {
     try {
       console.log('Deleting recipe:', id);
       
@@ -254,30 +218,25 @@ export const useRecipes = () => {
       });
       return { success: false, error: err };
     }
-  };
+  }, [toast]);
 
-  // Set up real-time subscription
   useEffect(() => {
     fetchRecipes();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel('recipes_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'recipes' },
-        (payload) => {
-          console.log('Real-time update:', payload);
-          // Refetch data when changes occur
-          fetchRecipes();
-        }
+        () => fetchRecipes()
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchRecipes]);
 
+  // Return stable object reference
   return {
     recipes,
     loading,
