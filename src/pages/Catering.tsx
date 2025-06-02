@@ -1,46 +1,11 @@
+
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
-import emailjs from '@emailjs/browser'; // Uncomment if using EmailJS
-import { title } from 'process';
-
-const jollofDishes = [
-  // Original jollof dishes
-  { name: "Classic Nigerian Jollof", description: "Traditional Nigerian party Jollof rice.", price: "$26", image: "jollof/jollof1.jpg" },
-  { name: "Smoky Party Jollof", description: "Smoky, flavorful Jollof perfect for parties.", price: "$30", image: "jollof/jollof2.jpg" },
-  { name: "Coconut Jollof Rice", description: "Creamy coconut-infused Jollof rice.", price: "$37", image: "jollof/jollof3.jpg" },
-  { name: "Seafood Jollof Supreme", description: "Loaded with fresh seafood delights.", price: "$30", image: "jollof/jollof4.jpg" },
-  { name: "Vegetarian Garden Jollof", description: "Packed with garden-fresh vegetables.", price: "$35", image: "jollof/jollof5.jpg" },
-  { name: "Spicy Warrior Jollof", description: "Our signature spicy Jollof experience.", price: "$30", image: "jollof/jollof6.jpg" },
-  
-  // Added fried rice dishes
-  { 
-    name: "Umami Bomb Fried Rice",
-    description: "Savory explosion with shiitake mushrooms, bonito flakes, and spicy XO sauce topped with crispy garlic",
-    price: "$30", 
-    image: "Fried-Rice1.jpg"
-  },
-    { 
-    name: "Smoked Jollof Snails",
-    description: "Exquisite smoked snails served on a bed of our signature party Jollof rice with a rich pepper sauce",
-    price: "$45", 
-    image: "jollof-snails1.jpg"
-  },
-  { 
-    name: "Dragon's Breath Fried Rice",
-    description: "Intensely spicy fried rice with habanero peppers, Szechuan peppercorns, and chili oil. Not for the faint-hearted!",
-    price: "$27", 
-    image: "Fried-Rice2.jpg"
-  },
-  { 
-    name: "Tropical Warrior Fried Rice",
-    description: "Jerk-spiced fried rice with grilled shrimp, mango, coconut flakes and a ghost pepper honey glaze",
-    price: "$29", 
-    image: "Fried-Rice3.jpg"
-  }
-];
+import { useRecipes } from '../hooks/useRecipes';
+import emailjs from '@emailjs/browser';
 
 const additionalMeats = [
   { name: "Whole Event", price: "$15/person" },
@@ -56,6 +21,8 @@ const TAX_RATE = 0.0825; // 8.25%
 
 const Catering = () => {
   const { toast } = useToast();
+  const { recipes, loading, error } = useRecipes();
+  
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -65,11 +32,14 @@ const Catering = () => {
     numberOfPeople: '',
     additionalInfo: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [selectedDishIndex, setSelectedDishIndex] = useState(0);
+  const [loadingForm, setLoadingForm] = useState(false);
+  const [selectedRecipeId, setSelectedRecipeId] = useState('');
+
+  // Get the selected recipe object
+  const selectedRecipe = recipes.find(recipe => recipe.id === selectedRecipeId) || recipes[0];
 
   // Calculate prices
-  const dishPrice = Number(jollofDishes[selectedDishIndex].price.replace('$', '')) || 0;
+  const dishPrice = selectedRecipe ? selectedRecipe.medium_price : 0;
   const numPeople = Number(formData.numberOfPeople) || 0;
   const subtotal = dishPrice * numPeople;
   const labour = LABOUR_COST;
@@ -82,16 +52,25 @@ const Catering = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleRecipeChange = (e) => {
+    setSelectedRecipeId(e.target.value);
+  };
+
+  // Set initial selected recipe when recipes load
+  useState(() => {
+    if (recipes.length > 0 && !selectedRecipeId) {
+      setSelectedRecipeId(recipes[0].id);
+    }
+  }, [recipes, selectedRecipeId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingForm(true);
 
-    // EmailJS Integration (uncomment and configure if needed)
-    
     const formattedMessage = `
 Event Booking Request:
 -------------------
-Selected Jollof Dish: ${jollofDishes[selectedDishIndex].name} ($${dishPrice}/person)
+Selected Jollof Dish: ${selectedRecipe?.name || 'Unknown'} ($${dishPrice}/person)
 Number of People: ${numPeople}
 Subtotal: $${subtotal.toFixed(2)}
 Labour for the Day: $${labour.toFixed(2)}
@@ -103,20 +82,6 @@ Event Date: ${formData.eventDate}
 Phone: ${formData.phone}
 Additional Information: ${formData.additionalInfo || 'None provided'}
     `;
-    const clientMessage = `
-${formData.name}'s Event Booking Request:
----------------------------------
-Selected Jollof Dish: ${jollofDishes[selectedDishIndex].name} ($${dishPrice}/person)
-Number of People: ${numPeople}
-Subtotal: $${subtotal.toFixed(2)}
-Labour for the Day: $${labour.toFixed(2)}
-Tax (8.25%): $${tax.toFixed(2)}
-Total: $${total.toFixed(2)}
-
-Event Type: ${formData.eventType}
-Event Date: ${formData.eventDate}
-Phone: ${formData.phone}
-Additional Information: ${formData.additionalInfo || 'None provided'}`;
 
     const templateParams = {
       title: `${formData.name}'s Event Booking Request`,
@@ -125,6 +90,7 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
       message: formattedMessage,
       time: new Date().toLocaleString(),
     };
+
     try {
       await emailjs.send(
         'service_nhkj0mp',
@@ -152,25 +118,39 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setLoadingForm(false);
     }
-    
-    // For now, just show the toast and reset the form
-    toast({
-      title: "Booking Request Submitted!",
-      description: "We'll contact you within 24 hours to confirm your event details.",
-    });
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      eventDate: '',
-      eventType: '',
-      numberOfPeople: '',
-      additionalInfo: ''
-    });
-    setLoading(false);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading catering options...</div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-white text-xl mb-4">Error loading recipes</div>
+          <div className="text-gray-300">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // No recipes available
+  if (recipes.length === 0) {
+    return (
+      <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black flex items-center justify-center">
+        <div className="text-white text-xl">No recipes available for catering</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-r from-black via-coral-900 to-black">
@@ -187,34 +167,36 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
             <div className="glass-card p-8">
               <h2 className="text-3xl font-bold text-white mb-6">Our Catering Packages</h2>
               
-              {/* Jollof Dishes Dropdown */}
+              {/* Dynamic Jollof Dishes Dropdown */}
               <div className="mb-6">
                 <label className="block text-gray-300 mb-2">Choose Your Jollof Dish</label>
                 <div className="relative">
                   <select
                     className="w-full pt-4 pb-4 pl-3 pr-6 border border-gray-700 rounded-xl text-white bg-coral-900"
-                    value={selectedDishIndex}
-                    onChange={e => setSelectedDishIndex(Number(e.target.value))}
+                    value={selectedRecipeId}
+                    onChange={handleRecipeChange}
                   >
-                    {jollofDishes.map((dish, idx) => (
-                      <option key={dish.name} value={idx}>{dish.name}</option>
+                    {recipes.map((recipe) => (
+                      <option key={recipe.id} value={recipe.id}>
+                        {recipe.name}
+                      </option>
                     ))}
                   </select>
-{/*                   <span className="absolute right-3 top-3 text-gray-400">
-                    <svg width="" height="24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                  </span> */}
                 </div>
+                
                 {/* Display selected dish details */}
-                <div className="mt-4 bg-gradient-to-r from-black via-coral-900 to-black p-4 rounded-2xl">
-                  <img 
-                    src={jollofDishes[selectedDishIndex].image} 
-                    alt={jollofDishes[selectedDishIndex].name} 
-                    className="w-full h-64 object-cover rounded-lg mb-4"
-                  />
-                  <h3 className="text-xl font-semibold text-coral-300">{jollofDishes[selectedDishIndex].name}</h3>
-                  <p className="text-gray-300">{jollofDishes[selectedDishIndex].description}</p>
-                  <p className="text-2xl font-bold text-white">{jollofDishes[selectedDishIndex].price}</p>
-                </div>
+                {selectedRecipe && (
+                  <div className="mt-4 bg-gradient-to-r from-black via-coral-900 to-black p-4 rounded-2xl">
+                    <img 
+                      src={selectedRecipe.image} 
+                      alt={selectedRecipe.name} 
+                      className="w-full h-64 object-cover rounded-lg mb-4"
+                    />
+                    <h3 className="text-xl font-semibold text-coral-300">{selectedRecipe.name}</h3>
+                    <p className="text-gray-300">{selectedRecipe.description}</p>
+                    <p className="text-2xl font-bold text-white">${selectedRecipe.medium_price}</p>
+                  </div>
+                )}
               </div>
 
               {/* Special Proteins */}
@@ -237,6 +219,7 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
                   <span className="text-coral-300 font-semibold">${labour.toFixed(2)}</span>
                 </div>
               </div>
+              
               <div>
                 <label className="block text-gray-300 mb-2">Number of Persons *</label>
                 <Input
@@ -250,6 +233,7 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
                   required
                 />
               </div>
+              
               {/* Price Breakdown */}
               <div className="mt-6 p-4 bg-black/30 rounded-lg text-white space-y-2">
                 <div className="flex justify-between">
@@ -356,7 +340,6 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
                   <option value="other">Other</option>
                 </select>
               </div>
-              {/* NUMBER OF PEOPLE FIELD */}
               <div>
                 <label className="block text-gray-300 mb-2">Number of People *</label>
                 <Input
@@ -383,9 +366,9 @@ Additional Information: ${formData.additionalInfo || 'None provided'}`;
               <Button 
                 type="submit" 
                 className="w-full text-lg text-white py-4 bg-gradient-to-r from-black via-zinc-900 to-black"
-                disabled={loading}
+                disabled={loadingForm}
               >
-                {loading ? 'Submitting...' : 'Submit Booking Request'}
+                {loadingForm ? 'Submitting...' : 'Submit Booking Request'}
               </Button>
             </form>
           </div>
