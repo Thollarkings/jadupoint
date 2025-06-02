@@ -35,6 +35,11 @@ const normalizeImageUrl = (imagePath: string): string => {
     return imagePath;
   }
   
+  // If it's a data URL (base64), return as is
+  if (imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  
   // If it starts with /, it's already a proper path from root
   if (imagePath.startsWith('/')) {
     return imagePath;
@@ -81,7 +86,7 @@ export const useRecipes = () => {
 
       if (error) {
         console.error('Supabase fetch error:', error);
-        throw error;
+        throw new Error(`Database error: ${error.message}`);
       }
       
       console.log('Fetched recipes:', data);
@@ -90,10 +95,11 @@ export const useRecipes = () => {
       setError(null);
     } catch (err: any) {
       console.error('Error fetching recipes:', err);
-      setError('Failed to load recipes');
+      const errorMessage = err.message || 'Failed to load recipes';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to load recipes. Please check your connection.",
+        description: `Failed to load recipes: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
@@ -105,6 +111,15 @@ export const useRecipes = () => {
   const addRecipe = async (recipeData: Omit<SupabaseRecipe, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       console.log('Adding recipe:', recipeData);
+      
+      // Validate required fields
+      if (!recipeData.name || !recipeData.description || !recipeData.image) {
+        throw new Error('Name, description, and image are required');
+      }
+      
+      if (!recipeData.medium_price || !recipeData.large_price) {
+        throw new Error('Both medium and large prices are required');
+      }
       
       const { data, error } = await supabase
         .from('recipes')
@@ -126,7 +141,7 @@ export const useRecipes = () => {
 
       if (error) {
         console.error('Supabase insert error:', error);
-        throw error;
+        throw new Error(`Database error: ${error.message}`);
       }
       
       console.log('Recipe added successfully:', data);
@@ -139,9 +154,10 @@ export const useRecipes = () => {
       return { success: true, data: typedRecipe };
     } catch (err: any) {
       console.error('Error adding recipe:', err);
+      const errorMessage = err.message || 'Unknown error occurred';
       toast({
         title: "Error",
-        description: `Failed to add recipe: ${err.message}`,
+        description: `Failed to add recipe: ${errorMessage}`,
         variant: "destructive"
       });
       return { success: false, error: err };
@@ -152,6 +168,10 @@ export const useRecipes = () => {
   const updateRecipe = async (id: string, recipeData: Partial<SupabaseRecipe>) => {
     try {
       console.log('Updating recipe:', id, recipeData);
+      
+      if (!id) {
+        throw new Error('Recipe ID is required');
+      }
       
       const updateData = {
         ...recipeData,
@@ -171,7 +191,7 @@ export const useRecipes = () => {
 
       if (error) {
         console.error('Supabase update error:', error);
-        throw error;
+        throw new Error(`Database error: ${error.message}`);
       }
       
       if (!data) {
@@ -188,9 +208,10 @@ export const useRecipes = () => {
       return { success: true, data: typedRecipe };
     } catch (err: any) {
       console.error('Error updating recipe:', err);
+      const errorMessage = err.message || 'Unknown error occurred';
       toast({
         title: "Error",
-        description: `Failed to update recipe: ${err.message}`,
+        description: `Failed to update recipe: ${errorMessage}`,
         variant: "destructive"
       });
       return { success: false, error: err };
@@ -202,6 +223,10 @@ export const useRecipes = () => {
     try {
       console.log('Deleting recipe:', id);
       
+      if (!id) {
+        throw new Error('Recipe ID is required');
+      }
+      
       const { error } = await supabase
         .from('recipes')
         .delete()
@@ -209,7 +234,7 @@ export const useRecipes = () => {
 
       if (error) {
         console.error('Supabase delete error:', error);
-        throw error;
+        throw new Error(`Database error: ${error.message}`);
       }
       
       console.log('Recipe deleted successfully');
@@ -221,9 +246,10 @@ export const useRecipes = () => {
       return { success: true };
     } catch (err: any) {
       console.error('Error deleting recipe:', err);
+      const errorMessage = err.message || 'Unknown error occurred';
       toast({
         title: "Error",
-        description: `Failed to delete recipe: ${err.message}`,
+        description: `Failed to delete recipe: ${errorMessage}`,
         variant: "destructive"
       });
       return { success: false, error: err };
