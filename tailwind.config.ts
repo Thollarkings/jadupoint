@@ -65,6 +65,7 @@ export default {
 				},
 				coral: {
 					50: '#fef2f2',
+					60: '#483c46',
 					100: '#fee2e2',
 					200: '#fecaca',
 					300: '#fca5a5',

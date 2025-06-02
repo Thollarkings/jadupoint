@@ -224,7 +224,7 @@ export const RecipeForm = ({
         <select
           value={formData.spice_level}
           onChange={(e) => handleInputChange('spice_level', e.target.value)}
-          className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white"
+          className="w-full p-3  bg-coral-60/100 border border-white/20 rounded-lg text-white"
         >
           <option value="Mild">Mild</option>
           <option value="Medium">Medium</option>
