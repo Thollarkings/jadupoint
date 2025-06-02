@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -57,7 +56,7 @@ const Catering = () => {
   };
 
   // Set initial selected recipe when recipes load
-  useState(() => {
+  useEffect(() => {
     if (recipes.length > 0 && !selectedRecipeId) {
       setSelectedRecipeId(recipes[0].id);
     }
