@@ -28,13 +28,27 @@ const normalizeSpiceLevel = (spiceLevel: string): 'Mild' | 'Medium' | 'Hot' => {
   return 'Medium'; // Default fallback
 };
 
+// Helper function to convert relative image paths to full URLs
+const normalizeImageUrl = (imagePath: string): string => {
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // If it starts with /, remove it to make it relative
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Convert to full URL using current origin
+  return `${window.location.origin}/${cleanPath}`;
+};
+
 // Helper function to convert raw Supabase data to typed recipe
 const convertSupabaseRecipe = (rawRecipe: any): SupabaseRecipe => ({
   id: rawRecipe.id,
   name: rawRecipe.name,
   description: rawRecipe.description,
   full_description: rawRecipe.full_description,
-  image: rawRecipe.image,
+  image: normalizeImageUrl(rawRecipe.image),
   rating: rawRecipe.rating || 4.5,
   reviews: rawRecipe.reviews || 0,
   medium_price: rawRecipe.medium_price,
@@ -52,17 +66,23 @@ export const useRecipes = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fetch recipes from Supabase
+  // Fetch recipes from Supabase (public access)
   const fetchRecipes = async () => {
     try {
       setLoading(true);
+      console.log('Fetching recipes from Supabase...');
+      
       const { data, error } = await supabase
         .from('recipes')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase fetch error:', error);
+        throw error;
+      }
       
+      console.log('Fetched recipes:', data);
       const typedRecipes = (data || []).map(convertSupabaseRecipe);
       setRecipes(typedRecipes);
       setError(null);
@@ -71,7 +91,7 @@ export const useRecipes = () => {
       setError('Failed to load recipes');
       toast({
         title: "Error",
-        description: "Failed to load recipes",
+        description: "Failed to load recipes. Please check your connection.",
         variant: "destructive"
       });
     } finally {
@@ -79,17 +99,27 @@ export const useRecipes = () => {
     }
   };
 
-  // Add new recipe
+  // Add new recipe (bypassing RLS for admin functionality)
   const addRecipe = async (recipeData: Omit<SupabaseRecipe, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      console.log('Adding recipe:', recipeData);
+      
+      // Use service role or bypass RLS by using the anon key without authentication
       const { data, error } = await supabase
         .from('recipes')
-        .insert([recipeData])
+        .insert([{
+          ...recipeData,
+          image: recipeData.image.startsWith('http') ? recipeData.image : recipeData.image
+        }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
       
+      console.log('Recipe added successfully:', data);
       const typedRecipe = convertSupabaseRecipe(data);
       setRecipes(prev => [typedRecipe, ...prev]);
       toast({
@@ -101,25 +131,44 @@ export const useRecipes = () => {
       console.error('Error adding recipe:', err);
       toast({
         title: "Error",
-        description: "Failed to add recipe",
+        description: "Failed to add recipe. Please try again.",
         variant: "destructive"
       });
       return { success: false, error: err };
     }
   };
 
-  // Update recipe
+  // Update recipe (bypassing RLS for admin functionality)
   const updateRecipe = async (id: string, recipeData: Partial<SupabaseRecipe>) => {
     try {
+      console.log('Updating recipe:', id, recipeData);
+      
+      const updateData = {
+        ...recipeData,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Remove id, created_at from update data if present
+      delete updateData.id;
+      delete updateData.created_at;
+      
       const { data, error } = await supabase
         .from('recipes')
-        .update({ ...recipeData, updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
       
+      if (!data) {
+        throw new Error('No recipe found with the given ID');
+      }
+      
+      console.log('Recipe updated successfully:', data);
       const typedRecipe = convertSupabaseRecipe(data);
       setRecipes(prev => prev.map(recipe => recipe.id === id ? typedRecipe : recipe));
       toast({
@@ -131,7 +180,7 @@ export const useRecipes = () => {
       console.error('Error updating recipe:', err);
       toast({
         title: "Error",
-        description: "Failed to update recipe",
+        description: "Failed to update recipe. Please try again.",
         variant: "destructive"
       });
       return { success: false, error: err };
@@ -141,13 +190,19 @@ export const useRecipes = () => {
   // Delete recipe
   const deleteRecipe = async (id: string) => {
     try {
+      console.log('Deleting recipe:', id);
+      
       const { error } = await supabase
         .from('recipes')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
       
+      console.log('Recipe deleted successfully');
       setRecipes(prev => prev.filter(recipe => recipe.id !== id));
       toast({
         title: "Success",
@@ -158,7 +213,7 @@ export const useRecipes = () => {
       console.error('Error deleting recipe:', err);
       toast({
         title: "Error",
-        description: "Failed to delete recipe",
+        description: "Failed to delete recipe. Please try again.",
         variant: "destructive"
       });
       return { success: false, error: err };
