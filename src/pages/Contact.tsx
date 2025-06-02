@@ -66,11 +66,11 @@ const Contact = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-white font-semibold mb-1">Phone</h3>
-                <p className="text-gray-300">+1 (555) 123-JADU</p>
+                <p className="text-gray-300">+1 (682) 283-3812</p>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Email</h3>
-                <p className="text-gray-300">hello@jadupoint.com</p>
+                <p className="text-gray-300">consult@jadupoint.com</p>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1">Address</h3>
@@ -82,8 +82,7 @@ const Contact = () => {
               <div>
                 <h3 className="text-white font-semibold mb-1">Hours</h3>
                 <div className="text-gray-300 text-sm">
-                  <p>Monday - Friday: 10am - 10pm</p>
-                  <p>Saturday - Sunday: 9am - 11pm</p>
+                  <p>24/7</p>
                 </div>
               </div>
             </div>
@@ -93,9 +92,9 @@ const Contact = () => {
                 For immediate assistance with orders or general inquiries, you can also reach us through:
               </p>
               <div className="space-y-2 text-sm">
-                <p className="text-gray-300">WhatsApp: +1 (555) 123-JADU</p>
-                <p className="text-gray-300">Twitter: @JaduPoint</p>
-                <p className="text-gray-300">Instagram: @jadupoint_official</p>
+                <p className="text-gray-300">WhatsApp: +1 (682) 283-3812</p>
+{/*                 <p className="text-gray-300">Twitter: @JaduPoint</p>
+                <p className="text-gray-300">Instagram: @jadupoint_official</p> */}
               </div>
             </div>
           </div>
