@@ -204,10 +204,10 @@ export const useRecipes = () => {
       
       const { data, error } = await supabase
         .from('recipes')
-        .insert([{
+        .insert({
           ...recipeData,
-          ingredients: `{${recipeData.ingredients.join(',')}}`
-        }])
+          ingredients: recipeData.ingredients
+        })
         .select()
         .single();
 
@@ -243,10 +243,6 @@ export const useRecipes = () => {
   const updateRecipe = useCallback(async (id: string, recipeData: Partial<SupabaseRecipe>) => {
     try {
       const updateData = { ...recipeData };
-      
-      if (updateData.ingredients) {
-        updateData.ingredients = `{${updateData.ingredients.join(',')}}`;
-      }
 
       const { data, error } = await supabase
         .from('recipes')
