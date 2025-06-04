@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from './use-toast';
@@ -11,7 +10,7 @@ import {
   deleteRecipeFromSupabase 
 } from '../services/recipeService';
 
-export { SupabaseRecipe } from '../utils/recipeTypes';
+export type { SupabaseRecipe } from '../utils/recipeTypes';
 
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<SupabaseRecipe[]>([]);
