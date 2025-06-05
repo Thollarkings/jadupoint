@@ -39,7 +39,7 @@ const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
       } else {
         toast({
           title: "Success",
-          description: isSignUp ? "Account created successfully!" : "Welcome back!"
+          description: isSignUp ? "Account created successfully, please check your email for confirmation." : "Welcome back!"
         });
         onClose();
         setEmail('');

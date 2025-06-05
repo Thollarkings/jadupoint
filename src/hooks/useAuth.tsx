@@ -40,7 +40,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const finalDestination = '/payments'; // or '/checkout' based on your app logic
+  const redirectUrl = `${window.location.origin}/confirm-account?redirectTo=${encodeURIComponent(finalDestination)}`;
+  
     
     const { error } = await supabase.auth.signUp({
       email,
