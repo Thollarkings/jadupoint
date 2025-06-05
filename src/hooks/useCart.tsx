@@ -1,5 +1,7 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './useAuth';
+import { loadUserCart, saveUserCart } from '../services/checkoutService';
 
 export interface CartItem {
   id: string;
@@ -23,6 +25,37 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
+
+  // Load user's cart when they log in
+  useEffect(() => {
+    const loadCart = async () => {
+      if (user) {
+        const savedCart = await loadUserCart(user.id);
+        if (savedCart.length > 0) {
+          setItems(savedCart);
+        }
+      } else {
+        // Load from localStorage for guests
+        const guestCart = localStorage.getItem('guest_cart');
+        if (guestCart) {
+          setItems(JSON.parse(guestCart));
+        }
+      }
+    };
+
+    loadCart();
+  }, [user]);
+
+  // Save cart whenever items change
+  useEffect(() => {
+    if (user) {
+      saveUserCart(user.id, items);
+    } else {
+      // Save to localStorage for guests
+      localStorage.setItem('guest_cart', JSON.stringify(items));
+    }
+  }, [items, user]);
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
     setItems(prev => {
@@ -56,7 +89,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    if (user) {
+      saveUserCart(user.id, []);
+    } else {
+      localStorage.removeItem('guest_cart');
+    }
+  };
 
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
