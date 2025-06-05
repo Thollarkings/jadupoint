@@ -238,7 +238,7 @@ const Checkout = () => {
                   <Checkbox
                     id="show-company"
                     checked={showOptionalFields}
-                    onCheckedChange={setShowOptionalFields}
+                    onCheckedChange={(checked) => setShowOptionalFields(checked === true)}
                     className="border-white/20"
                   />
                   <Label htmlFor="show-company" className="text-gray-300 cursor-pointer">
@@ -444,7 +444,7 @@ const Checkout = () => {
                   <Checkbox
                     id="ship-different"
                     checked={formData.shipToDifferent}
-                    onCheckedChange={(checked) => handleInputChange('shipToDifferent', checked.toString())}
+                    onCheckedChange={(checked) => handleInputChange('shipToDifferent', checked === true ? 'true' : 'false')}
                     className="border-white/20"
                   />
                   <Label htmlFor="ship-different" className="text-gray-300 cursor-pointer">
