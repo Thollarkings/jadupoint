@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Stepper } from '../components/ui/stepper';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
@@ -15,7 +16,7 @@ import { ChevronDown, Info, AlertCircle } from 'lucide-react';
 
 const Checkout = () => {
   const { items, total, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -33,9 +34,20 @@ const Checkout = () => {
     email: user?.email || '',
     confirmEmail: user?.email || '',
     password: '',
-    shipToDifferent: false
+    shipToDifferent: false,
+    // Shipping address fields
+    shippingFirstName: '',
+    shippingLastName: '',
+    shippingCompany: '',
+    shippingCountry: 'United States (US)',
+    shippingStreetAddress: '',
+    shippingApartment: '',
+    shippingCity: '',
+    shippingState: '',
+    shippingZipCode: ''
   });
 
+  const [checkoutType, setCheckoutType] = useState<'account' | 'guest'>('account');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -67,18 +79,37 @@ const Checkout = () => {
     if (!formData.state) newErrors.state = 'State is required';
     if (!formData.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (!formData.confirmEmail.trim()) newErrors.confirmEmail = 'Email confirmation is required';
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    // Shipping address validation if different address is selected
+    if (formData.shipToDifferent) {
+      if (!formData.shippingFirstName.trim()) newErrors.shippingFirstName = 'Shipping first name is required';
+      if (!formData.shippingLastName.trim()) newErrors.shippingLastName = 'Shipping last name is required';
+      if (!formData.shippingStreetAddress.trim()) newErrors.shippingStreetAddress = 'Shipping street address is required';
+      if (!formData.shippingCity.trim()) newErrors.shippingCity = 'Shipping city is required';
+      if (!formData.shippingState) newErrors.shippingState = 'Shipping state is required';
+      if (!formData.shippingZipCode.trim()) newErrors.shippingZipCode = 'Shipping ZIP code is required';
     }
 
-    // Email confirmation validation
-    if (formData.email && formData.confirmEmail && formData.email !== formData.confirmEmail) {
-      newErrors.confirmEmail = 'Email addresses do not match';
+    // Account creation validation
+    if (!user && checkoutType === 'account') {
+      if (!formData.email.trim()) newErrors.email = 'Email is required';
+      if (!formData.confirmEmail.trim()) newErrors.confirmEmail = 'Email confirmation is required';
+      if (!formData.password.trim()) {
+        newErrors.password = 'Password is required';
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (formData.email && !emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+
+      // Email confirmation validation
+      if (formData.email && formData.confirmEmail && formData.email !== formData.confirmEmail) {
+        newErrors.confirmEmail = 'Email addresses do not match';
+      }
     }
 
     // ZIP code validation (US format)
@@ -86,20 +117,14 @@ const Checkout = () => {
     if (formData.zipCode && !zipRegex.test(formData.zipCode)) {
       newErrors.zipCode = 'Please enter a valid ZIP code';
     }
+    if (formData.shipToDifferent && formData.shippingZipCode && !zipRegex.test(formData.shippingZipCode)) {
+      newErrors.shippingZipCode = 'Please enter a valid shipping ZIP code';
+    }
 
     // Phone validation
     const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
     if (formData.phone && !phoneRegex.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
-    }
-
-    // Password validation (if user is not logged in)
-    if (!user) {
-      if (!formData.password.trim()) {
-        newErrors.password = 'Password is required';
-      } else if (formData.password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters';
-      }
     }
 
     setErrors(newErrors);
@@ -129,23 +154,57 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      let userId = user?.id || null;
+      let customerEmail = user?.email || null;
+      let customerName = user?.email?.split('@')[0] || null;
+
+      // Create account if user selected account creation and is not logged in
+      if (!user && checkoutType === 'account') {
+        const { error } = await signUp(formData.email, formData.password, `${formData.firstName} ${formData.lastName}`);
+        
+        if (error) {
+          toast({
+            title: "Account Creation Failed",
+            description: error.message || "Failed to create account. Please try again.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
+        toast({
+          title: "Account Created",
+          description: "Your account has been created successfully!",
+          variant: "default"
+        });
+
+        customerEmail = formData.email;
+        customerName = `${formData.firstName} ${formData.lastName}`;
+      }
+
+      // Prepare shipping address
+      const shippingAddress = formData.shipToDifferent 
+        ? `${formData.shippingStreetAddress}${formData.shippingApartment ? ', ' + formData.shippingApartment : ''}, ${formData.shippingCity}, ${formData.shippingState} ${formData.shippingZipCode}`
+        : `${formData.streetAddress}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+
       // Prepare order data to pass to payment page
       const orderData = {
         items: JSON.parse(JSON.stringify(items)),
         total: total,
-        user_id: user?.id || null,
-        guest_name: user ? null : `${formData.firstName} ${formData.lastName}`,
-        guest_email: user ? null : formData.email,
+        user_id: userId,
+        guest_name: checkoutType === 'guest' ? `${formData.firstName} ${formData.lastName}` : null,
+        guest_email: checkoutType === 'guest' ? formData.email : customerEmail,
         phone_number: formData.phone,
-        delivery_address: `${formData.streetAddress}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+        delivery_address: shippingAddress,
+        billing_address: `${formData.streetAddress}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
         status: 'pending'
       };
 
       const customerInfo = {
-        name: user ? user.email?.split('@')[0] || '' : `${formData.firstName} ${formData.lastName}`,
-        email: user ? user.email : formData.email,
+        name: customerName || `${formData.firstName} ${formData.lastName}`,
+        email: customerEmail || formData.email,
         phone: formData.phone,
-        address: `${formData.streetAddress}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`
+        address: shippingAddress
       };
 
       // Navigate to payment page with order data
@@ -196,6 +255,23 @@ const Checkout = () => {
           {/* Billing Form */}
           <div className="glass-card p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Billing Details</h2>
+            
+            {/* Account Creation vs Guest Checkout */}
+            {!user && (
+              <div className="mb-6 p-4 bg-white/5 rounded-lg">
+                <Label className="text-gray-300 text-lg font-semibold mb-3 block">Checkout Options</Label>
+                <RadioGroup value={checkoutType} onValueChange={(value: 'account' | 'guest') => setCheckoutType(value)} className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="account" id="account" className="border-white/20 text-coral-400" />
+                    <Label htmlFor="account" className="text-gray-300 cursor-pointer">Create Account & Place Order</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="guest" id="guest" className="border-white/20 text-coral-400" />
+                    <Label htmlFor="guest" className="text-gray-300 cursor-pointer">Guest Checkout</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
             
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Fields */}
@@ -380,46 +456,48 @@ const Checkout = () => {
                 )}
               </div>
 
-              {/* Email Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-300">Email address *</Label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.email ? 'border-red-500' : ''}`}
-                    placeholder="Enter email"
-                    disabled={!!user}
-                  />
-                  {errors.email && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-gray-300">Confirm email address *</Label>
-                  <Input
-                    type="email"
-                    value={formData.confirmEmail}
-                    onChange={(e) => handleInputChange('confirmEmail', e.target.value)}
-                    className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.confirmEmail ? 'border-red-500' : ''}`}
-                    placeholder="Confirm email"
-                    disabled={!!user}
-                  />
-                  {errors.confirmEmail && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {errors.confirmEmail}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Password (for guest users) */}
+              {/* Email Fields - Only show for account creation or guest checkout */}
               {!user && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-300">Email address *</Label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.email ? 'border-red-500' : ''} ${checkoutType === 'guest' ? 'opacity-50' : ''}`}
+                      placeholder="Enter email"
+                      disabled={checkoutType === 'guest'}
+                    />
+                    {errors.email && (
+                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-gray-300">Confirm email address *</Label>
+                    <Input
+                      type="email"
+                      value={formData.confirmEmail}
+                      onChange={(e) => handleInputChange('confirmEmail', e.target.value)}
+                      className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.confirmEmail ? 'border-red-500' : ''} ${checkoutType === 'guest' ? 'opacity-50' : ''}`}
+                      placeholder="Confirm email"
+                      disabled={checkoutType === 'guest'}
+                    />
+                    {errors.confirmEmail && (
+                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.confirmEmail}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Password (for account creation only) */}
+              {!user && checkoutType === 'account' && (
                 <div>
                   <Label className="text-gray-300">Create account password *</Label>
                   <Input
@@ -452,11 +530,154 @@ const Checkout = () => {
                   </Label>
                   <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${formData.shipToDifferent ? 'rotate-180' : ''}`} />
                 </div>
+                
+                {/* Shipping Address Form */}
                 {formData.shipToDifferent && (
-                  <div className="mt-4 p-4 bg-white/5 rounded-lg animate-fade-in">
-                    <p className="text-gray-300 text-sm">
-                      Shipping address form would appear here with similar fields as billing.
-                    </p>
+                  <div className="mt-4 p-4 bg-white/5 rounded-lg animate-fade-in space-y-4">
+                    <h3 className="text-lg font-semibold text-white mb-4">Shipping Address</h3>
+                    
+                    {/* Shipping Name Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-300">First name *</Label>
+                        <Input
+                          value={formData.shippingFirstName}
+                          onChange={(e) => handleInputChange('shippingFirstName', e.target.value)}
+                          className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.shippingFirstName ? 'border-red-500' : ''}`}
+                          placeholder="Enter first name"
+                        />
+                        {errors.shippingFirstName && (
+                          <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {errors.shippingFirstName}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">Last name *</Label>
+                        <Input
+                          value={formData.shippingLastName}
+                          onChange={(e) => handleInputChange('shippingLastName', e.target.value)}
+                          className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.shippingLastName ? 'border-red-500' : ''}`}
+                          placeholder="Enter last name"
+                        />
+                        {errors.shippingLastName && (
+                          <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {errors.shippingLastName}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Shipping Company (Optional) */}
+                    <div>
+                      <Label className="text-gray-300">Company name (optional)</Label>
+                      <Input
+                        value={formData.shippingCompany}
+                        onChange={(e) => handleInputChange('shippingCompany', e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                        placeholder="Company name"
+                      />
+                    </div>
+
+                    {/* Shipping Country */}
+                    <div>
+                      <Label className="text-gray-300">Country / Region *</Label>
+                      <Select value={formData.shippingCountry} onValueChange={(value) => handleInputChange('shippingCountry', value)}>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="United States (US)">United States (US)</SelectItem>
+                          <SelectItem value="Canada">Canada</SelectItem>
+                          <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Shipping Street Address */}
+                    <div>
+                      <Label className="text-gray-300">Street address *</Label>
+                      <Input
+                        value={formData.shippingStreetAddress}
+                        onChange={(e) => handleInputChange('shippingStreetAddress', e.target.value)}
+                        className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.shippingStreetAddress ? 'border-red-500' : ''}`}
+                        placeholder="House number and street name"
+                      />
+                      {errors.shippingStreetAddress && (
+                        <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.shippingStreetAddress}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Shipping Apartment (Optional) */}
+                    <div>
+                      <Label className="text-gray-300">Apartment, suite, unit, etc. (optional)</Label>
+                      <Input
+                        value={formData.shippingApartment}
+                        onChange={(e) => handleInputChange('shippingApartment', e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                        placeholder="Apartment, suite, unit, building, floor, etc."
+                      />
+                    </div>
+
+                    {/* Shipping City, State, ZIP */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label className="text-gray-300">Town / City *</Label>
+                        <Input
+                          value={formData.shippingCity}
+                          onChange={(e) => handleInputChange('shippingCity', e.target.value)}
+                          className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.shippingCity ? 'border-red-500' : ''}`}
+                          placeholder="Enter city"
+                        />
+                        {errors.shippingCity && (
+                          <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {errors.shippingCity}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">State *</Label>
+                        <Select value={formData.shippingState} onValueChange={(value) => handleInputChange('shippingState', value)}>
+                          <SelectTrigger className={`bg-white/10 border-white/20 text-white ${errors.shippingState ? 'border-red-500' : ''}`}>
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-800 border-gray-600 max-h-60">
+                            {states.map((state) => (
+                              <SelectItem key={state} value={state} className="text-white hover:bg-gray-700">
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.shippingState && (
+                          <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {errors.shippingState}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">ZIP Code *</Label>
+                        <Input
+                          value={formData.shippingZipCode}
+                          onChange={(e) => handleInputChange('shippingZipCode', e.target.value)}
+                          className={`bg-white/10 border-white/20 text-white placeholder-gray-400 ${errors.shippingZipCode ? 'border-red-500' : ''}`}
+                          placeholder="12345"
+                        />
+                        {errors.shippingZipCode && (
+                          <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {errors.shippingZipCode}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
