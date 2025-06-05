@@ -131,7 +131,7 @@ const Checkout = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -522,7 +522,7 @@ const Checkout = () => {
                   <Checkbox
                     id="ship-different"
                     checked={formData.shipToDifferent}
-                    onCheckedChange={(checked) => handleInputChange('shipToDifferent', checked === true ? 'true' : 'false')}
+                    onCheckedChange={(checked) => handleInputChange('shipToDifferent', checked)}
                     className="border-white/20"
                   />
                   <Label htmlFor="ship-different" className="text-gray-300 cursor-pointer">
