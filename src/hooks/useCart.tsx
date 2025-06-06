@@ -19,49 +19,43 @@ interface CartContextType {
   updateQuantity: (id: string, size: string, quantity: number) => void;
   clearCart: () => void;
   total: number;
-  isLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  // Load user's cart when they log in or component mounts
+  // Load user's cart when they log in
   useEffect(() => {
     const loadCart = async () => {
-      setIsLoading(true);
-      try {
-        const savedCart = await loadUserCart(user?.id || null);
+      if (user) {
+        const savedCart = await loadUserCart(user.id);
         if (savedCart.length > 0) {
           setItems(savedCart);
         }
-      } catch (error) {
-        console.error('Error loading cart:', error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        // Load from localStorage for guests
+        const guestCart = localStorage.getItem('guest_cart');
+        if (guestCart) {
+          setItems(JSON.parse(guestCart));
+        }
       }
     };
 
     loadCart();
-  }, [user?.id]);
+  }, [user]);
 
-  // Save cart whenever items change (but not on initial load)
+  // Save cart whenever items change
   useEffect(() => {
-    if (!isLoading && items.length >= 0) {
-      const saveCart = async () => {
-        try {
-          await saveUserCart(user?.id || null, items);
-        } catch (error) {
-          console.error('Error saving cart:', error);
-        }
-      };
-      
-      saveCart();
+    if (user) {
+      saveUserCart(user.id, items);
+    } else {
+      // Save to localStorage for guests
+      localStorage.setItem('guest_cart', JSON.stringify(items));
     }
-  }, [items, user?.id, isLoading]);
+  }, [items, user]);
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
     setItems(prev => {
@@ -95,17 +89,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = async () => {
+  const clearCart = () => {
     setItems([]);
-    try {
-      await saveUserCart(user?.id || null, []);
-      if (user?.id) {
-        localStorage.removeItem(`cart_${user.id}`);
-      } else {
-        localStorage.removeItem('guest_cart');
-      }
-    } catch (error) {
-      console.error('Error clearing cart:', error);
+    if (user) {
+      saveUserCart(user.id, []);
+    } else {
+      localStorage.removeItem('guest_cart');
     }
   };
 
@@ -118,8 +107,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem,
       updateQuantity,
       clearCart,
-      total,
-      isLoading
+      total
     }}>
       {children}
     </CartContext.Provider>

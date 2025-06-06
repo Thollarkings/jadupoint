@@ -36,7 +36,7 @@ export const saveUserBillingInfo = async (userId: string | null, formData: Check
       console.error('Error saving profile info:', profileError);
     }
 
-    // Then save detailed billing info to Supabase
+    // Then save detailed billing info
     const { error: billingError } = await supabase
       .from('billing_info')
       .upsert({
@@ -51,19 +51,14 @@ export const saveUserBillingInfo = async (userId: string | null, formData: Check
         state: formData.state,
         zip_code: formData.zipCode,
         phone: formData.phone,
-        email: formData.email,
         updated_at: new Date().toISOString()
       });
 
     if (billingError) {
-      console.error('Error saving billing info to Supabase:', billingError);
-      throw billingError;
+      console.error('Error saving billing info:', billingError);
     }
-
-    console.log('Billing info saved to Supabase successfully');
   } catch (error) {
     console.error('Error saving billing info:', error);
-    throw error;
   }
 };
 
@@ -78,7 +73,7 @@ export const loadUserBillingInfo = async (userId: string | null): Promise<Partia
   }
 
   try {
-    // Load billing info from Supabase database
+    // Load billing info from database
     const { data: billingData, error: billingError } = await supabase
       .from('billing_info')
       .select('*')
@@ -122,7 +117,6 @@ export const loadUserBillingInfo = async (userId: string | null): Promise<Partia
     }
 
     // Map database fields to form data fields
-    console.log('Billing info loaded from Supabase:', billingData);
     return {
       firstName: billingData.first_name || '',
       lastName: billingData.last_name || '',
@@ -134,8 +128,6 @@ export const loadUserBillingInfo = async (userId: string | null): Promise<Partia
       state: billingData.state || '',
       zipCode: billingData.zip_code || '',
       phone: billingData.phone || '',
-      email: billingData.email || '',
-      confirmEmail: billingData.email || '',
     };
   } catch (error) {
     console.error('Error loading billing info:', error);
@@ -144,102 +136,24 @@ export const loadUserBillingInfo = async (userId: string | null): Promise<Partia
 };
 
 export const saveUserCart = async (userId: string | null, items: CartItem[]) => {
-  if (!userId) {
-    // Save to localStorage for guests
-    localStorage.setItem('guest_cart', JSON.stringify(items));
-    return;
-  }
+  if (!userId || items.length === 0) return;
 
   try {
-    // First, delete all existing cart items for this user
-    const { error: deleteError } = await supabase
-      .from('cart_items')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      console.error('Error clearing existing cart items:', deleteError);
-      throw deleteError;
-    }
-
-    // Then insert all current cart items
-    if (items.length > 0) {
-      const cartItemsToInsert = items.map(item => ({
-        user_id: userId,
-        recipe_id: item.id,
-        recipe_name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        size: item.size,
-        image: item.image
-      }));
-
-      const { error: insertError } = await supabase
-        .from('cart_items')
-        .insert(cartItemsToInsert);
-
-      if (insertError) {
-        console.error('Error saving cart items to Supabase:', insertError);
-        throw insertError;
-      }
-
-      console.log('Cart items saved to Supabase successfully');
-    }
-
-    // Also save to localStorage as backup
+    // Save cart items to localStorage for now, can be moved to database later
     localStorage.setItem(`cart_${userId}`, JSON.stringify(items));
   } catch (error) {
     console.error('Error saving cart:', error);
-    // Fallback to localStorage if Supabase fails
-    localStorage.setItem(`cart_${userId}`, JSON.stringify(items));
   }
 };
 
 export const loadUserCart = async (userId: string | null): Promise<CartItem[]> => {
-  if (!userId) {
-    // Load from localStorage for guests
-    const guestCart = localStorage.getItem('guest_cart');
-    return guestCart ? JSON.parse(guestCart) : [];
-  }
+  if (!userId) return [];
 
   try {
-    // Load cart items from Supabase
-    const { data: cartItems, error } = await supabase
-      .from('cart_items')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error loading cart items from Supabase:', error);
-      // Fallback to localStorage
-      const savedCart = localStorage.getItem(`cart_${userId}`);
-      return savedCart ? JSON.parse(savedCart) : [];
-    }
-
-    if (cartItems && cartItems.length > 0) {
-      const cartItemsFormatted: CartItem[] = cartItems.map(item => ({
-        id: item.recipe_id,
-        name: item.recipe_name,
-        price: Number(item.price),
-        quantity: item.quantity,
-        size: item.size as 'medium' | 'large',
-        image: item.image
-      }));
-
-      console.log('Cart items loaded from Supabase:', cartItemsFormatted);
-      
-      // Also save to localStorage as backup
-      localStorage.setItem(`cart_${userId}`, JSON.stringify(cartItemsFormatted));
-      
-      return cartItemsFormatted;
-    }
-
-    return [];
-  } catch (error) {
-    console.error('Error loading cart:', error);
-    // Fallback to localStorage
     const savedCart = localStorage.getItem(`cart_${userId}`);
     return savedCart ? JSON.parse(savedCart) : [];
+  } catch (error) {
+    console.error('Error loading cart:', error);
+    return [];
   }
 };
