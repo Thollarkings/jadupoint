@@ -36,7 +36,7 @@ export const saveUserBillingInfo = async (userId: string | null, formData: Check
       console.error('Error saving profile info:', profileError);
     }
 
-    // Then save detailed billing info to Supabase using upsert to handle existing records
+    // Then save detailed billing info to Supabase
     const { error: billingError } = await supabase
       .from('billing_info')
       .upsert({
@@ -53,8 +53,6 @@ export const saveUserBillingInfo = async (userId: string | null, formData: Check
         phone: formData.phone,
         email: formData.email,
         updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
       });
 
     if (billingError) {
@@ -243,53 +241,5 @@ export const loadUserCart = async (userId: string | null): Promise<CartItem[]> =
     // Fallback to localStorage
     const savedCart = localStorage.getItem(`cart_${userId}`);
     return savedCart ? JSON.parse(savedCart) : [];
-  }
-};
-
-// Function to merge guest cart with user cart on login
-export const mergeGuestCartWithUserCart = async (userId: string): Promise<CartItem[]> => {
-  try {
-    // Get guest cart from localStorage
-    const guestCartStr = localStorage.getItem('guest_cart');
-    const guestCart: CartItem[] = guestCartStr ? JSON.parse(guestCartStr) : [];
-    
-    if (guestCart.length === 0) {
-      // No guest cart to merge, just load user cart
-      return await loadUserCart(userId);
-    }
-
-    // Load existing user cart from Supabase
-    const userCart = await loadUserCart(userId);
-    
-    // Merge carts (guest cart items take priority)
-    const mergedCart: CartItem[] = [...userCart];
-    
-    for (const guestItem of guestCart) {
-      const existingItemIndex = mergedCart.findIndex(
-        item => item.id === guestItem.id && item.size === guestItem.size
-      );
-      
-      if (existingItemIndex >= 0) {
-        // Item exists, update quantity (add guest quantity to existing)
-        mergedCart[existingItemIndex].quantity += guestItem.quantity;
-      } else {
-        // New item, add to cart
-        mergedCart.push(guestItem);
-      }
-    }
-    
-    // Save merged cart to Supabase
-    await saveUserCart(userId, mergedCart);
-    
-    // Clear guest cart from localStorage
-    localStorage.removeItem('guest_cart');
-    
-    console.log('Guest cart merged with user cart successfully');
-    return mergedCart;
-    
-  } catch (error) {
-    console.error('Error merging guest cart with user cart:', error);
-    // Fallback: just load user cart
-    return await loadUserCart(userId);
   }
 };
