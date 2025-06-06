@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './useAuth';
-import { loadUserCart, saveUserCart } from '../services/checkoutService';
+import { loadUserCart, saveUserCart, mergeGuestCartWithUserCart } from '../services/checkoutService';
 
 export interface CartItem {
   id: string;
@@ -27,6 +27,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { user } = useAuth();
 
   // Load user's cart when they log in or component mounts
@@ -34,10 +35,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const loadCart = async () => {
       setIsLoading(true);
       try {
-        const savedCart = await loadUserCart(user?.id || null);
-        if (savedCart.length > 0) {
-          setItems(savedCart);
+        let cartItems: CartItem[] = [];
+        
+        if (user?.id) {
+          // User is logged in
+          if (!hasInitialized) {
+            // First login or page refresh - check if there's a guest cart to merge
+            const guestCartStr = localStorage.getItem('guest_cart');
+            if (guestCartStr && JSON.parse(guestCartStr).length > 0) {
+              console.log('Merging guest cart with user cart');
+              cartItems = await mergeGuestCartWithUserCart(user.id);
+            } else {
+              cartItems = await loadUserCart(user.id);
+            }
+          } else {
+            // User was already logged in, just load their cart
+            cartItems = await loadUserCart(user.id);
+          }
+        } else {
+          // Guest user
+          cartItems = await loadUserCart(null);
         }
+        
+        setItems(cartItems);
+        setHasInitialized(true);
       } catch (error) {
         console.error('Error loading cart:', error);
       } finally {
@@ -46,11 +67,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadCart();
-  }, [user?.id]);
+  }, [user?.id, hasInitialized]);
 
   // Save cart whenever items change (but not on initial load)
   useEffect(() => {
-    if (!isLoading && items.length >= 0) {
+    if (hasInitialized && !isLoading) {
       const saveCart = async () => {
         try {
           await saveUserCart(user?.id || null, items);
@@ -61,7 +82,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       
       saveCart();
     }
-  }, [items, user?.id, isLoading]);
+  }, [items, user?.id, isLoading, hasInitialized]);
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
     setItems(prev => {

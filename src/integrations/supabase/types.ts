@@ -16,6 +16,7 @@ export type Database = {
           company: string | null
           country: string | null
           created_at: string
+          email: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -32,6 +33,7 @@ export type Database = {
           company?: string | null
           country?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           company?: string | null
           country?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -57,6 +60,45 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          image: string
+          price: number
+          quantity: number
+          recipe_id: string
+          recipe_name: string
+          size: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image: string
+          price: number
+          quantity?: number
+          recipe_id: string
+          recipe_name: string
+          size: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image?: string
+          price?: number
+          quantity?: number
+          recipe_id?: string
+          recipe_name?: string
+          size?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

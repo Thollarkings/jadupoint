@@ -9,7 +9,7 @@ import { BillingDetailsForm } from './BillingDetailsForm';
 import { ShippingAddressForm } from './ShippingAddressForm';
 import { CheckoutOptions } from './CheckoutOptions';
 import { validateCheckoutForm } from '../../utils/checkoutValidation';
-import { saveUserBillingInfo, saveUserCart, loadUserBillingInfo } from '../../services/checkoutService';
+import { saveUserBillingInfo, loadUserBillingInfo } from '../../services/checkoutService';
 
 export interface CheckoutFormData {
   firstName: string;
@@ -42,7 +42,7 @@ interface CheckoutFormProps {
 }
 
 export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
-  const { items, total, clearCart } = useCart();
+  const { items, total } = useCart();
   const { user, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -158,9 +158,6 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
       // Save billing info for both guests and logged-in users
       await saveUserBillingInfo(userId, formData);
       
-      // Save cart for logged-in users and guests
-      await saveUserCart(userId, items);
-
       // Prepare shipping address
       const shippingAddress = formData.shipToDifferent 
         ? `${formData.shippingStreetAddress}${formData.shippingApartment ? ', ' + formData.shippingApartment : ''}, ${formData.shippingCity}, ${formData.shippingState} ${formData.shippingZipCode}`
@@ -185,6 +182,9 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
         phone: formData.phone,
         address: shippingAddress
       };
+
+      console.log('Proceeding to payment with order data:', orderData);
+      console.log('Customer info:', customerInfo);
 
       // Navigate to payment page with order data
       navigate('/payment', {
