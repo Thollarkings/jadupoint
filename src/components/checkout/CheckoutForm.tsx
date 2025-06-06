@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/button';
@@ -47,46 +46,80 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState<CheckoutFormData>({
-    firstName: '',
-    lastName: '',
-    company: '',
-    country: 'United States (US)',
-    streetAddress: '',
-    apartment: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    phone: '',
-    email: user?.email || '',
-    confirmEmail: user?.email || '',
-    password: '',
-    shipToDifferent: false,
-    shippingFirstName: '',
-    shippingLastName: '',
-    shippingCompany: '',
-    shippingCountry: 'United States (US)',
-    shippingStreetAddress: '',
-    shippingApartment: '',
-    shippingCity: '',
-    shippingState: '',
-    shippingZipCode: ''
-  });
+  // Load initial formData from localStorage or default
+  const getInitialFormData = (): CheckoutFormData => {
+    try {
+      if (user) {
+        const savedData = localStorage.getItem(`billingInfo_${user.id}`);
+        if (savedData) return JSON.parse(savedData);
+      } else {
+        const guestData = localStorage.getItem('guestBillingInfo');
+        if (guestData) return JSON.parse(guestData);
+      }
+    } catch (e) {
+      console.error('Failed to load billing info from localStorage', e);
+    }
 
-  const [checkoutType, setCheckoutType] = useState<'account' | 'guest'>('account');
+    return {
+      firstName: '',
+      lastName: '',
+      company: '',
+      country: 'United States (US)',
+      streetAddress: '',
+      apartment: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      phone: '',
+      email: user?.email || '',
+      confirmEmail: user?.email || '',
+      password: '',
+      shipToDifferent: false,
+      shippingFirstName: '',
+      shippingLastName: '',
+      shippingCompany: '',
+      shippingCountry: 'United States (US)',
+      shippingStreetAddress: '',
+      shippingApartment: '',
+      shippingCity: '',
+      shippingState: '',
+      shippingZipCode: ''
+    };
+  };
+
+  const [formData, setFormData] = useState<CheckoutFormData>(getInitialFormData());
+  const [checkoutType, setCheckoutType] = useState<'account' | 'guest'>(
+    user ? 'account' : 'guest'
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+  // Save to localStorage every time formData changes
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem(`billingInfo_${user.id}`, JSON.stringify(formData));
+      } else {
+        localStorage.setItem('guestBillingInfo', JSON.stringify(formData));
+      }
+    } catch (e) {
+      console.error('Failed to save to localStorage', e);
+    }
+  }, [formData, user]);
+
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationErrors = validateCheckoutForm(formData, checkoutType, user);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -108,7 +141,7 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
       // Create account if user selected account creation and is not logged in
       if (!user && checkoutType === 'account') {
         const { error } = await signUp(formData.email, formData.password, `${formData.firstName} ${formData.lastName}`);
-        
+
         if (error) {
           toast({
             title: "Account Creation Failed",
@@ -130,13 +163,13 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
       }
 
       // Save billing info and cart for logged-in users
-      if (user || (checkoutType === 'account' && !user)) {
+      if (userId || (checkoutType === 'account' && !user)) {
         await saveUserBillingInfo(userId, formData);
         await saveUserCart(userId, items);
       }
 
       // Prepare shipping address
-      const shippingAddress = formData.shipToDifferent 
+      const shippingAddress = formData.shipToDifferent
         ? `${formData.shippingStreetAddress}${formData.shippingApartment ? ', ' + formData.shippingApartment : ''}, ${formData.shippingCity}, ${formData.shippingState} ${formData.shippingZipCode}`
         : `${formData.streetAddress}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
 
@@ -185,13 +218,13 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
   return (
     <div className="glass-card p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Billing Details</h2>
-      
-      <CheckoutOptions 
+
+      <CheckoutOptions
         user={user}
         checkoutType={checkoutType}
         onCheckoutTypeChange={setCheckoutType}
       />
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <BillingDetailsForm
           formData={formData}
@@ -206,9 +239,9 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
           errors={errors}
           onInputChange={handleInputChange}
         />
-        
-        <Button 
-          type="submit" 
+
+        <Button
+          type="submit"
           className="w-full btn-coral text-lg py-4 mt-6"
           disabled={loading}
         >

@@ -5,6 +5,8 @@ import { Button } from '../components/ui/button';
 import { Stepper } from '../components/ui/stepper';
 import { CheckoutForm } from '../components/checkout/CheckoutForm';
 import { OrderSummary } from '../components/checkout/OrderSummary';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth'; // Assuming you have an auth hook
 
 const Checkout = () => {
   const { items, total } = useCart();

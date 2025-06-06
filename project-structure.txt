@@ -1,0 +1,148 @@
+.
+|-- .gitignore
+|-- README.md
+|-- bun.lockb
+|-- components.json
+|-- dist.zip
+|-- eslint.config.js
+|-- index.html
+|-- package-lock.json
+|-- package.json
+|-- postcss.config.js
+|-- project-structure.txt
+|-- public
+|   |-- android-chrome-192x192.png
+|   |-- android-chrome-512x512.png
+|   |-- apple-touch-icon.png
+|   |-- favicon-16x16.png
+|   |-- favicon-32x32.png
+|   |-- favicon.ico
+|   |-- icons
+|   |   |-- 3a0c2c92-b6b4-4ecf-860b-51d47a953615.jpg
+|   |   |-- 4b920537-5bed-44d4-8e2b-a69d5f9c77f2.jpg
+|   |   |-- grok_report.pdf
+|   |   |-- image.png
+|   |   |-- imageJaduPoint.png
+|   |   `-- share-ios.png
+|   |-- js
+|   |   `-- ios-install-prompt.js
+|   |-- placeholder.svg
+|   `-- robots.txt
+|-- service-worker.js
+|-- src
+|   |-- App.css
+|   |-- App.tsx
+|   |-- components
+|   |   |-- AuthDialog.tsx
+|   |   |-- CartSidebar.tsx
+|   |   |-- Footer.tsx
+|   |   |-- Header.tsx
+|   |   |-- RecipeCard.tsx
+|   |   |-- RecipeCardSkeleton.tsx
+|   |   |-- RecipeDetailsPanel.tsx
+|   |   |-- RecipeForm.tsx
+|   |   |-- checkout
+|   |   |   |-- BillingDetailsForm.tsx
+|   |   |   |-- CheckoutForm.tsx
+|   |   |   |-- CheckoutOptions.tsx
+|   |   |   |-- OrderSummary.tsx
+|   |   |   `-- ShippingAddressForm.tsx
+|   |   `-- ui
+|   |       |-- accordion.tsx
+|   |       |-- alert-dialog.tsx
+|   |       |-- alert.tsx
+|   |       |-- aspect-ratio.tsx
+|   |       |-- avatar.tsx
+|   |       |-- badge.tsx
+|   |       |-- breadcrumb.tsx
+|   |       |-- button.tsx
+|   |       |-- calendar.tsx
+|   |       |-- card.tsx
+|   |       |-- carousel.tsx
+|   |       |-- chart.tsx
+|   |       |-- checkbox.tsx
+|   |       |-- collapsible.tsx
+|   |       |-- command.tsx
+|   |       |-- context-menu.tsx
+|   |       |-- dialog.tsx
+|   |       |-- drawer.tsx
+|   |       |-- dropdown-menu.tsx
+|   |       |-- form.tsx
+|   |       |-- hover-card.tsx
+|   |       |-- input-otp.tsx
+|   |       |-- input.tsx
+|   |       |-- label.tsx
+|   |       |-- menubar.tsx
+|   |       |-- navigation-menu.tsx
+|   |       |-- pagination.tsx
+|   |       |-- popover.tsx
+|   |       |-- progress.tsx
+|   |       |-- radio-group.tsx
+|   |       |-- resizable.tsx
+|   |       |-- scroll-area.tsx
+|   |       |-- select.tsx
+|   |       |-- separator.tsx
+|   |       |-- sheet.tsx
+|   |       |-- sidebar.tsx
+|   |       |-- skeleton.tsx
+|   |       |-- slider.tsx
+|   |       |-- sonner.tsx
+|   |       |-- stepper.tsx
+|   |       |-- switch.tsx
+|   |       |-- table.tsx
+|   |       |-- tabs.tsx
+|   |       |-- textarea.tsx
+|   |       |-- toast.tsx
+|   |       |-- toaster.tsx
+|   |       |-- toggle-group.tsx
+|   |       |-- toggle.tsx
+|   |       |-- tooltip.tsx
+|   |       `-- use-toast.ts
+|   |-- data
+|   |   `-- recipes.ts
+|   |-- hooks
+|   |   |-- use-mobile.tsx
+|   |   |-- use-toast.ts
+|   |   |-- useAuth.tsx
+|   |   |-- useCart.tsx
+|   |   `-- useRecipes.tsx
+|   |-- index.css
+|   |-- integrations
+|   |   `-- supabase
+|   |       |-- client.ts
+|   |       `-- types.ts
+|   |-- lib
+|   |   `-- utils.ts
+|   |-- main.tsx
+|   |-- pages
+|   |   |-- About.tsx
+|   |   |-- AddRecipe.tsx
+|   |   |-- AdminDashboard.tsx
+|   |   |-- AdminLogin.tsx
+|   |   |-- Catering.tsx
+|   |   |-- Checkout.tsx
+|   |   |-- ConfirmAccount.tsx
+|   |   |-- Contact.tsx
+|   |   |-- EditRecipe.tsx
+|   |   |-- Home.tsx
+|   |   |-- Index.tsx
+|   |   |-- NotFound.tsx
+|   |   |-- Order.tsx
+|   |   `-- Payment.tsx
+|   |-- services
+|   |   |-- checkoutService.ts
+|   |   `-- recipeService.ts
+|   |-- utils
+|   |   |-- checkoutValidation.ts
+|   |   |-- recipeCache.ts
+|   |   `-- recipeTypes.ts
+|   `-- vite-env.d.ts
+|-- supabase
+|   `-- config.toml
+|-- tailwind.config.ts
+|-- tsconfig.app.json
+|-- tsconfig.json
+|-- tsconfig.node.json
+`-- vite.config.ts
+
+17 directories, 129 files
