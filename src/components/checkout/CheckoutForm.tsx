@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/button';
@@ -9,7 +9,7 @@ import { BillingDetailsForm } from './BillingDetailsForm';
 import { ShippingAddressForm } from './ShippingAddressForm';
 import { CheckoutOptions } from './CheckoutOptions';
 import { validateCheckoutForm } from '../../utils/checkoutValidation';
-import { saveUserBillingInfo, saveUserCart } from '../../services/checkoutService';
+import { saveUserBillingInfo, saveUserCart, loadUserBillingInfo } from '../../services/checkoutService';
 
 export interface CheckoutFormData {
   firstName: string;
@@ -76,6 +76,32 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
   const [checkoutType, setCheckoutType] = useState<'account' | 'guest'>('account');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [isLoadingBillingInfo, setIsLoadingBillingInfo] = useState(true);
+
+  // Load billing information when component mounts or user changes
+  useEffect(() => {
+    const loadBillingInfo = async () => {
+      setIsLoadingBillingInfo(true);
+      try {
+        const billingInfo = await loadUserBillingInfo(user?.id || null);
+        
+        if (billingInfo) {
+          setFormData(prev => ({
+            ...prev,
+            ...billingInfo,
+            email: billingInfo.email || user?.email || '',
+            confirmEmail: billingInfo.email || user?.email || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading billing information:', error);
+      } finally {
+        setIsLoadingBillingInfo(false);
+      }
+    };
+
+    loadBillingInfo();
+  }, [user]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -129,11 +155,11 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
         customerName = `${formData.firstName} ${formData.lastName}`;
       }
 
-      // Save billing info and cart for logged-in users
-      if (user || (checkoutType === 'account' && !user)) {
-        await saveUserBillingInfo(userId, formData);
-        await saveUserCart(userId, items);
-      }
+      // Save billing info for both guests and logged-in users
+      await saveUserBillingInfo(userId, formData);
+      
+      // Save cart for logged-in users and guests
+      await saveUserCart(userId, items);
 
       // Prepare shipping address
       const shippingAddress = formData.shipToDifferent 
@@ -181,6 +207,17 @@ export const CheckoutForm = ({ onSuccess }: CheckoutFormProps) => {
       setLoading(false);
     }
   };
+
+  if (isLoadingBillingInfo) {
+    return (
+      <div className="glass-card p-6">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral-400"></div>
+          <p className="mt-4 text-white">Loading your information...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card p-6">
