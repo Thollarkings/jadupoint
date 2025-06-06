@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
@@ -40,9 +39,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-  const finalDestination = '/payments'; // or '/checkout' based on your app logic
-  const redirectUrl = `${window.location.origin}/confirm-account?redirectTo=${encodeURIComponent(finalDestination)}`;
-  
+    const finalDestination = '/payments'; // or '/checkout' based on your app logic
+    const redirectUrl = `${window.location.origin}/confirm-account?redirectTo=${encodeURIComponent(finalDestination)}`;
     
     const { error } = await supabase.auth.signUp({
       email,

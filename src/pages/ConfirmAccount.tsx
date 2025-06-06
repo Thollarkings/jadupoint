@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -21,6 +22,7 @@ const ConfirmAccount = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const type = urlParams.get('type');
+        const redirectTo = urlParams.get('redirectTo') || '/checkout';
 
         if (user?.email_confirmed_at) {
           // If already confirmed, skip verification
